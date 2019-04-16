@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- Modeled from https://gist.github.com/zzarcon/dae3db4b470cb5140fb5#file-fibo_loop-js -->
+    <form title="fibonacci">
+        <input type="number" name="num">
+
+        <input type="number" title="a" value="1">
+        <input type="number" title="b" value="0">
+        <input type="number" title="temp">
+
+        <div class="loop">
+            <div class="comparison">
+                <data title="a"></data>
+                <math class="greater-than"></math>
+                <data title="b"></data>
+            </div>
+
+            <data title="temp" value="a"></data>
+
+            <data title="a">
+                <data title="a"></data>
+                <math class="add"></math>
+                <data title="b"></data>
+            </data>
+
+            <data title="b" value="temp"></data>
+
+            <data title="num">
+                <data title="num"></data>
+                <math class="subtract"></math>
+                <data value="1"></data>
+            </data>
+        </div>
+        <output title="b"></output>
+    </form>
+
+
+    <!-- An ordered list (Array) -->
+    <ol title="my top 5 favorite fruits">
+        <li>Apple</li>
+        <li>Banana</li>
+        <li>Orange</li>
+        <li>Kiwi</li>
+        <li>Dragon Fruit</li>
+    </ol>
+
+    <!-- An unordered list (Lookup table/list) -->
+    <ul title="names that start with j">
+        <li>James</li>
+        <li>Jeorge</li>
+        <li>Jack</li>
+        <li>Julian</li>
+        <li>Jim</li>
+    </ul>
+
+    <input type="text" title="favorite fruit">
+
+    <data title="first favorite fruit">
+        <cite title="my top 5 favorite fruits">
+            <cite title="index">1</cite>
+        </cite>
+    </data>
+
+
+    <ul class="switch" title="first favorite fruit">
+        <li>
+            <cite title="output">This person's favorite fruit wasn't banana or apple</cite>
+        </li>
+        <li value="Apple">
+            <cite title="output">Apple was this person's favorite fruit!</cite>
+        </li>
+        <li value="Banana">
+            <cite title="output">Banana was this person's favorite fruit!</cite>
+        </li>
+    </ul>
+
+    <cite title="output">
+        <cite title="fibonacci">100</cite>
+    </cite>
+
+</body>
+</html>
