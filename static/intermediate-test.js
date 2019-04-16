@@ -1,61 +1,133 @@
-const code = [
+const tests = [];
+function registerTest(name,code) {
+    tests.push({
+        name:name,
+        code:code
+    });
+}
+function runTests() {
+    let passed = 0;
+    tests.forEach(test => {
+        try {
+            executeScript(test.code);
+            console.log(`${test.name} passed :)`);
+            passed++;
+        } catch(exception) {
+            console.error(exception);
+            console.log(`${test.name} failed :(`);
+        }
+    });
+    console.log(`${passed}/${tests.length} test${tests.length !== 1 ? "s" : ""} survived its execution (${(passed/tests.length*100).toFixed(1)}%)`);
+}
+
+const accumlationTest = [
     {
-        op: "dec",
+        op: DECLARE_OP_CODE,
         imp: {
             name: "my_function",
-            type: "fnc",
-            parameters: [],
+            type: FUNCTION_TYPE_CODE,
+            parameters: ["rdc"],
             code: [
                 {
-                    op: "reg",
+                    op: REGISTER_OP_CODE,
                     imp: {
-                        value: "Hello, world!"
+                        name: "rdc"
                     }
                 },
                 {
-                    op: "exe",
+                    op: MATH_CODE_ADD,
+                    imp: {
+                        value: "Hello, world! "
+                    }
+                },
+                {
+                    op: SET_OP_CODE,
+                    imp: {
+                        name: "rdc"
+                    }
+                },
+                {
+                    op: EXECUTE_OP_CODE,
                     imp: {
                         name: "output"
+                    }
+                },
+                {
+                    op: RETURN_OP_CODE,
+                    imp: {
+                        name: "rdc"
                     }
                 }
             ]
         }
     },
     {
-        op: "exe",
+        op: SET_PARAMETER_OP_CODE,
+        imp: {
+            value: ""
+        }
+    },
+    {
+        op: EXECUTE_OP_CODE,
         imp: {
             name: "my_function"
         }
     },
     {
-        op: "exe",
+        op: SET_PARAMETER_OP_CODE
+    },
+    {
+        op: EXECUTE_OP_CODE,
         imp: {
             name: "my_function"
         }
     },
     {
-        op: "exe",
+        op: SET_PARAMETER_OP_CODE
+    },
+    {
+        op: EXECUTE_OP_CODE,
         imp: {
             name: "my_function"
         }
     },
     {
-        op: "exe",
+        op: SET_PARAMETER_OP_CODE
+    },
+    {
+        op: EXECUTE_OP_CODE,
         imp: {
             name: "my_function"
         }
     },
     {
-        op: "exe",
+        op: SET_PARAMETER_OP_CODE
+    },
+    {
+        op: EXECUTE_OP_CODE,
         imp: {
             name: "my_function"
         }
     },
     {
-        op: "exe",
+        op: SET_PARAMETER_OP_CODE
+    },
+    {
+        op: EXECUTE_OP_CODE,
         imp: {
             name: "my_function"
         }
     }
 ];
-executeScript(code);
+
+const jumpTest = [
+    {
+        op: REGISTER_OP_CODE,
+        imp: {
+            value:
+        }
+    }
+]
+
+registerTest("Accumulation test",accumlationTest);
+runTests();

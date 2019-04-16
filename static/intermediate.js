@@ -1,25 +1,7 @@
-const FUNCTION_TYPE_CODE = "fnc";
-const LIST_TYPE_CODE = "lst";
-const ARRAY_TYPE_CODE = "arr";
-const VARIABLE_TYPE_CODE = "var";
-
-const MATH_CODE_ADD = "add";
-const MATH_CODE_SUBTRACT = "sub";
-const MATH_CODE_MULTIPLY = "mtp";
-const MATH_CODE_DIVIDE = "div";
-
-const OUTPUT_FUNCTION_NAME = "output";
-const JUMP_OP_CODE = "jmp";
-const CON_JUMP_OP_CODE = "cjmp";
-const BREAK_OP_CODE = "brk";
-
-const DECLARE_OP_CODE = "dec";
-
-const SET_OP_CODE = "set";
-const SET_PARAMETER_OP_CODE = "prm";
-const REGISTER_OP_CODE = "reg";
-
-const EXECUTE_OP_CODE = "exe";
+const UNSET_VALUE_REGISTER = "The value register in this scope was never set before its use";
+const INVALID_OPERATION_CODE = "Invalid operation code";
+const MISSING_JUMP_PARAMETERS = "A jump operation is missing a type or a index in one of its jump blocks";
+const IMPOSSIBLE_TRUTH = "Cannot evaluate the truth of an undefined value";
 
 const outputElement = document.getElementById("output");
 function output(text) {
@@ -54,32 +36,60 @@ function reverseScopeSearch(name,scope) {
 
 function processDeclaration(statementOrBlock,blockScope) {
     const variableName = statementOrBlock.imp.name;
-    switch(statementOrBlock.imp.type) {
+    const typeCode = statementOrBlock.imp.type;
+    switch(typeCode) {
         case VARIABLE_TYPE_CODE:
             blockScope[variableName] = null;
             break;
         case ARRAY_TYPE_CODE:
             blockScope[variableName] = [];
+            //TODO
             break;
         case LIST_TYPE_CODE:
             blockScope[variableName] = {};
+            //TODO
             break;
         case FUNCTION_TYPE_CODE:
-            blockScope[variableName] = statementOrBlock;
+            blockScope[variableName] = statementOrBlock.imp;
             break;
+        default:
+            throw SyntaxError(`'${statementOrBlock.imp.type}' is not a valid declaration type code`);
     }
 }
 function processVariableSet(statementOrBlock,blockScope) {
-    const variableName = statementOrBlock.imp.name;
+    const hasCustomImp = statementOrBlock.imp ? true : false;
+    const variableName = hasCustomImp ? statementOrBlock.imp.name : undefined;
+    if(variableName === undefined) {
+        if(statementOrBlock.op === SET_PARAMETER_OP_CODE) {
+            if(hasCustomImp && statementOrBlock.imp.value !== undefined) {
+                blockScope.__internal__.functionRegister.push(
+                    statementOrBlock.imp.value
+                );
+            } else if(blockScope.__internal__.valueRegister !== undefined) {
+                blockScope.__internal__.functionRegister.push(
+                    blockScope.__internal__.valueRegister
+                );
+            } else {
+                throw ReferenceError(UNSET_VALUE_REGISTER);
+            }
+        } else {
+            throw SyntaxError(INVALID_OPERATION_CODE);
+        }
+        return;
+    }
     const scopeResult = reverseScopeSearch(
         variableName,blockScope
     );
     if(scopeResult.found) {
-        if(statementOrBlock.type === SET_PARAMETER_OP_CODE) {
-            blockScope.__internal__.functionRegister.push(
-                blockScope.__internal__.valueRegister
-            );
-        } else { 
+        if(statementOrBlock.op === SET_PARAMETER_OP_CODE) {
+            if(scopeResult.value !== undefined) {
+                blockScope.__internal__.functionRegister.push(
+                    scopeResult.value
+                );
+            } else {
+                throw ReferenceError(`Variable '${variableName}' is declared but it has no value`);
+            }
+        } else {
             scopeResult.scope[variableName] = blockScope.__internal__.valueRegister;
         }
     } else {
@@ -97,7 +107,8 @@ function processRegisterSet(statementOrBlock,blockScope) {
         variableName,blockScope
     );
     const variableResult = scopeResult.value;
-    if(variableResult) {
+    if(variableResult !== undefined) {
+        //TODO, array length, array index, list contains
         blockScope.__internal__.valueRegister = scopeResult.scope[variableName];
     } else if(scopeResult.found) {
         throw ReferenceError(`Variable '${variableName}' has no value`);
@@ -115,29 +126,29 @@ function processFunctionCall(statementOrBlock,blockScope) {
         default:
             const scopeResult = reverseScopeSearch(functionName,blockScope);
             let functionLookup = scopeResult.value;
-            if(functionLookup) {
-                if(functionLookup.imp.type === FUNCTION_TYPE_CODE) {
+            if(functionLookup !== undefined) {
+                if(functionLookup.type === FUNCTION_TYPE_CODE) {
                     executeBlock(
-                        functionLookup.imp.code,
+                        functionLookup.code,
                         blockScope,
                         function nextScopeParameterizer(nextScope) {
                             blockScope.__internal__.functionRegister.forEach((parameter,index) => {
-                                const parameterName = functionLookup.imp.parameters[index];
+                                const parameterName = functionLookup.parameters[index];
                                 nextScope[parameterName] = parameter;
                             });
                         }
                     );
-                    blockScope.__internal__.functionRegister.splice(0);
                 } else {
                     throw TypeError(`'${functionName}' is not of type '${FUNCTION_TYPE_CODE}'`);
                 }
             } else if(scopeResult.found) {
-                throw ReferenceError(`Function by the name '${functioName} was never declared`);
+                throw ReferenceError(`Function by the name '${functionName} was never declared`);
             } else {
                 throw ReferenceError(`Function by the name '${functionName}' was not found`);
             }
             break;
     }
+    blockScope.__internal__.functionRegister.splice(0);
 }
 function modifyValueRegister(operation,registerScope,righthandData) {
     const internalContainer = registerScope.__internal__;
@@ -163,7 +174,7 @@ function processBasicArithmetic(statementOrBlock,blockScope) {
             variableName,blockScope
         );
         const variableResult = scopeResult.value;
-        if(variableResult) {
+        if(variableResult !== undefined) {
             const righthandData = scopeResult.scope[variableName];
             modifyValueRegister(statementOrBlock.op,blockScope,righthandData);
         } else if(scopeResult.found) {
@@ -171,20 +182,55 @@ function processBasicArithmetic(statementOrBlock,blockScope) {
         } else {
             throw ReferenceError(`Variable '${variableName}' not found in enclosing scopes`);
         }
-    } else if(statementOrBlock.imp.value) {
+    } else if(statementOrBlock.imp.value !== undefined) {
         const righthandData = statementOrBlock.imp.value;
         modifyValueRegister(statementOrBlock.op,blockScope,righthandData);
     } else {
         throw SyntaxError(`Invalid data for arithmetic operation '${statementOrBlock.op}'`);
     }
 }
+function truthEvaluation(value) {
+    if(value === undefined) {
+        throw ReferenceError(IMPOSSIBLE_TRUTH);
+    }
+    const type = typeof value;
+    switch(typeof value) {
+        case "string":
+            return true;
+        case "number":
+            return !isNaN(value);
+        case "boolean":
+            return value;
+        case "object":
+            return value !== null;
+        default:
+            console.warn(`Unknown type (${type}) for '${value}'`);
+            return false;
+    }
+}
+function processJumpBlock(block,index) {
+    if(block.index !== undefined && block.type !== undefined) {
+        switch(block.type) {
+            case STATIC_JUMP_TYPE:
+                return block.index - 1;
+            case DYNAM_JUMP_TYPE:
+                return index - 1 + block.index;
+            default:
+                throw SyntaxError(`Jump type '${block.type}' is invalid for jump blocks`);
+        }
+    } else {
+        throw SyntaxError(MISSING_JUMP_PARAMETERS);
+    }
+}
 
 function executeBlock(data,parentScope,parameterizer) {
+    const scopeLevel = parentScope ? parentScope.__internal__.level + 1 : 0;
     const blockScope = {
         __internal__: {
             functionRegister: [],
-            valueRegister: null,
-            parent:parentScope
+            valueRegister: undefined,
+            parent:parentScope,
+            level: scopeLevel
         }
     };
     if(parameterizer) {
@@ -193,12 +239,40 @@ function executeBlock(data,parentScope,parameterizer) {
     for(let i = 0;i<data.length;i++) {
         const statementOrBlock = data[i];
         switch(statementOrBlock.op) {
+            case RETURN_OP_CODE:
+                let value = blockScope.__internal__.valueRegister;
+                if(statementOrBlock.imp) {
+                    if(statementOrBlock.imp.value !== undefined) {
+                        value = statementOrBlock.imp.value;
+                    } else if(statementOrBlock.imp.name !== undefined) {
+                        processRegisterSet(statementOrBlock,blockScope);
+                        value = blockScope.__internal__.valueRegister;
+                    }
+                }
+                if(parentScope) {
+                    parentScope.__internal__.valueRegister = value;
+                }
+                return;
             case CON_JUMP_OP_CODE:
+                const valueRegister = blockScope.__internal__.valueRegister;
+                if(valueRegister !== undefined) {
+                    const conditionIsTrue = truthEvaluation(valueRegister);
+                    let jumpBlock;
+                    if(conditionIsTrue) {
+                        jumpBlock = statementOrBlock.imp.true;
+                    } else {
+                        jumpBlock = statementOrBlock.imp.false;
+                    }
+                    i = processJumpBlock(jumpBlock,i);
+                } else {
+                    throw ReferenceError(UNSET_VALUE_REGISTER);
+                }
                 break;
             case JUMP_OP_CODE:
+                i = processJumpBlock(statementOrBlock.imp,i);
                 break;
             case BREAK_OP_CODE:
-                break;
+                return;
             case DECLARE_OP_CODE:
                 processDeclaration(statementOrBlock,blockScope);
                 break;
@@ -220,12 +294,8 @@ function executeBlock(data,parentScope,parameterizer) {
                 break;
         }
     };
+    console.log(blockScope);
 }
 function executeScript(scriptData) {
-    const globalScope = {
-        __internal__: {
-            parent: null
-        }
-    };
-    executeBlock(scriptData,globalScope,null);
+    executeBlock(scriptData,null,null);
 }

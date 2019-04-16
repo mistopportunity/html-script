@@ -151,4 +151,4 @@ function compileScriptBody(body) {
     return mainCode;
 }
 
-compileScript("script.html");
+//compileScript("script.html");
