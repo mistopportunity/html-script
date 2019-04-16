@@ -116,11 +116,10 @@ function processFunctionCall(statementOrBlock,blockScope) {
             const scopeResult = reverseScopeSearch(functionName,blockScope);
             let functionLookup = scopeResult.value;
             if(functionLookup) {
-                if(functionLookup.op === FUNCTION_TYPE_CODE) {
+                if(functionLookup.imp.type === FUNCTION_TYPE_CODE) {
                     executeBlock(
-                        statementOrBlock.imp.code,
+                        functionLookup.imp.code,
                         blockScope,
-                        blockScope.__internal__.functionRegister,
                         function nextScopeParameterizer(nextScope) {
                             blockScope.__internal__.functionRegister.forEach((parameter,index) => {
                                 const parameterName = functionLookup.imp.parameters[index];

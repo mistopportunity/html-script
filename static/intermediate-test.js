@@ -26,6 +26,36 @@ const code = [
         imp: {
             name: "my_function"
         }
+    },
+    {
+        op: "exe",
+        imp: {
+            name: "my_function"
+        }
+    },
+    {
+        op: "exe",
+        imp: {
+            name: "my_function"
+        }
+    },
+    {
+        op: "exe",
+        imp: {
+            name: "my_function"
+        }
+    },
+    {
+        op: "exe",
+        imp: {
+            name: "my_function"
+        }
+    },
+    {
+        op: "exe",
+        imp: {
+            name: "my_function"
+        }
     }
 ];
 executeScript(code);
