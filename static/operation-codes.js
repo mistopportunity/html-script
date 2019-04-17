@@ -22,6 +22,8 @@ const JUMP_OP_CODE = "jmp";
 const CON_JUMP_OP_CODE = "cjmp";
 const BREAK_OP_CODE = "brk";
 
+const DELETE_OP_CODE = "del";
+
 const COMPARE_OP_CODE = "cmp";
 
 const DECLARE_OP_CODE = "dec";
@@ -51,4 +53,3 @@ const ENM_CHANGE_ADD_END = "ead";
 const ENM_CHANGE_DEL_END = "ede";
 const ENM_CHANGE_ADD_IDX = "eax";
 const ENM_CHANGE_DEL_IDX = "edx";
-const ENUM_CHANGE_DEL_VAL = "edn";

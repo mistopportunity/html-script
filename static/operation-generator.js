@@ -82,7 +82,7 @@ const OP_GEN = new (function(){
         const operation = {
             op: DECLARE_OP_CODE,
             imp: {
-                type: ARRAY_TYPE_CODE,
+                type: ENUMERABLE_TYPE_CODE,
                 name: variableName,
             }
         }
@@ -109,6 +109,7 @@ const OP_GEN = new (function(){
     }
     this.setVariable_ByRegister = variableName => setVariableValueGenerator(variableName);
     this.setVariable_ByValue = (variableName,value) => setVariableValueGenerator(variableName,{value:value});
+    this.setVariable_ByVariable = (variableName,sourceName) => setVariableValueGenerator(variableName,{src:sourceName});
 
     function setRegisterGenerator(imp) {
         return {
@@ -308,17 +309,6 @@ const OP_GEN = new (function(){
         index: index,
         src: sourceName
     });
-    this.enumerableDeleteByName_FromValue = (variableName,value) => enumerableChangeGenerator(variableName,{
-        type: ENUM_CHANGE_DEL_VAL,
-        value: value
-    });
-    this.enumerableDeleteByName_FromRegister = variableName => enumerableChangeGenerator(variableName,{
-        type: ENUM_CHANGE_DEL_VAL
-    });
-    this.enumerableDeleteByName_FromVariable = (variableName,sourceName) => enumerableChangeGenerator(variableName,{
-        type: ENUM_CHANGE_DEL_VAL,
-        src: sourceName
-    });
 
     this.enumerableValueCount = function enumerableValueCountGenerator(variableName,valueName) {
         return {
@@ -335,6 +325,15 @@ const OP_GEN = new (function(){
             op: BLOCK_OP_CODE,
             imp: {
                 code: code
+            }
+        }
+    }
+
+    this.delete = function deleteGenerator(variableName) {
+        return {
+            op: DELETE_OP_CODE,
+            imp: {
+                name: variableName
             }
         }
     }

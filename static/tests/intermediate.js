@@ -122,7 +122,7 @@ const accumlationTest = [
 
 const jumpTest = [
     OP_GEN.functionBlock("test_function",[
-        OP_GEN.returnByValue(true)
+        OP_GEN.return_ByValue(true)
     ]),
     OP_GEN.conditionalJump()
 ]

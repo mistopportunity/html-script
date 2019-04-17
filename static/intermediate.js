@@ -3,6 +3,8 @@ const INVALID_OPERATION_CODE = "Invalid operation code";
 const MISSING_JUMP_PARAMETERS = "A jump operation is missing a type or a index in one of its jump blocks";
 const IMPOSSIBLE_TRUTH = "Cannot evaluate the truth of an undefined value";
 const MISSING_SCOPE_CODE = "Scope block operation is missing a code block";
+const ARRAY_EMPTY_ERROR = "This operation is invalid because the enumerable type is empty";
+const ARRAY_BOUNDS_ERROR = "The fabled index out of bounds error";
 
 const outputElement = document.getElementById("output");
 function output(text) {
@@ -35,6 +37,88 @@ function reverseScopeSearch(name,scope) {
     } while(true);
 }
 
+function lookupArray() {
+    this.array = [];
+    this.list = {};
+    this.push = item => {
+        this.array.push(item);
+        processAddedItem(item);
+        return item;
+    }
+    this.unshift = item => {
+        this.array.unshift(item);
+        processAddedItem(item);
+        return item;
+    }
+
+    function processAddedItem(item) {
+        if(this.list[item]) {
+            this.list.count++;
+        } else {
+            this.list[item] = {
+                count: 1,
+            }
+        }
+        return item;
+    }
+    function processRemovedItem(item) {
+        this.list[item].count--;
+        if(this.list[item].count < 1) {
+            delete this.list[item];
+        }
+        return item;
+    }
+
+    function genericSingleDeletion(operationType) {
+        if(this.array.length > 0) {
+            const removed = this.array[operationType]();
+            processRemovedItem(removed);
+            return removed;
+        } else {
+            throw Error(ARRAY_EMPTY_ERROR);
+        }
+    }
+
+    this.pop = () => genericSingleDeletion("pop");
+    this.shift = () => genericSingleDeletion("shift");
+
+    this.insert = (item,index) => {
+        this.array.splice(index,0,item);
+        processAddedItem(item);
+        return item;
+    }
+    this.delete = index => {
+        if(index < 0) {
+            throw Error(ARRAY_BOUNDS_ERROR);
+        } else if(index >= this.array.length) {
+            throw Error(ARRAY_BOUNDS_ERROR)
+        } else {
+            const removed = this.array.splice(index,1)[0];
+            processRemovedItem(removed);
+            return removed;
+        }
+    }
+    this.get = index => {
+        if(index < 0) {
+            throw Error(ARRAY_BOUNDS_ERROR);
+        } else if(index >= this.array.length) {
+            throw Error(ARRAY_BOUNDS_ERROR)
+        } else {
+            return this.array[index];
+        }
+    }
+    this.size = () => this.array.length;
+    this.contains = value => this.list[value] ? true : false;
+    this.countOf = value => {
+        const lookup = this.list[value];
+        if(lookup) {
+            return lookup.count;
+        } else {
+            return 0;
+        }
+    }
+}
+
 function processDeclaration(statementOrBlock,blockScope) {
     const variableName = statementOrBlock.imp.name;
     const typeCode = statementOrBlock.imp.type;
@@ -43,18 +127,22 @@ function processDeclaration(statementOrBlock,blockScope) {
             blockScope[variableName] = null;
             break;
         case ENUMERABLE_TYPE_CODE:
+            const container = new lookupArray()
             blockScope[variableName] = {
                 type: ENUMERABLE_TYPE_CODE,
-                array: [],
-                list: {},
-                lifetimeEntityCount: 0
+                container:container
             };
             if(statementOrBlock.imp.values === undefined) {
-
+                statementOrBlock.imp.values.forEach(value => {
+                    container.push(value);
+                });
             } else {
-
+                if(blockScope.__internal__.valueRegister.type === ENUMERABLE_TYPE_CODE) {
+                    blockScope.__internal__.valueRegister.forEach(value => {
+                        container.push(value);
+                    });
+                }
             }
-            //TODO, load start values or values from register enumerable into list
             break;
         case FUNCTION_TYPE_CODE:
             blockScope[variableName] = statementOrBlock.imp;
@@ -64,11 +152,10 @@ function processDeclaration(statementOrBlock,blockScope) {
     }
 }
 function processVariableSet(statementOrBlock,blockScope) {
-    const hasCustomImp = statementOrBlock.imp ? true : false;
-    const variableName = hasCustomImp ? statementOrBlock.imp.name : undefined;
+    const variableName = statementOrBlock.imp.name ? statementOrBlock.imp.name : undefined;
     if(variableName === undefined) {
         if(statementOrBlock.op === SET_PARAMETER_OP_CODE) {
-            if(hasCustomImp && statementOrBlock.imp.value !== undefined) {
+            if(statementOrBlock.imp.value !== undefined) {
                 blockScope.__internal__.functionRegister.push(
                     statementOrBlock.imp.value
                 );
@@ -95,6 +182,15 @@ function processVariableSet(statementOrBlock,blockScope) {
                 );
             } else {
                 throw ReferenceError(`Variable '${variableName}' is declared but it has no value`);
+            }
+        } else if(statementOrBlock.imp.src !== undefined) {
+            const sourceScopeResult = reverseScopeSearch(
+                statementOrBlock.imp.src,blockScope
+            );
+            if(sourceScopeResult.value !== undefined) {
+                scopeResult.scope[statementOrBlock.imp.src] = sourceScopeResult.value;
+            } else {
+                throw ReferenceError(`Variable '${statementOrBlock.imp.src}' is declared but it has no value`);
             }
         } else {
             scopeResult.scope[variableName] = blockScope.__internal__.valueRegister;
@@ -245,12 +341,11 @@ function processComparisonValue(value,blockScope) {
     }
 }
 function comparisonEvaluation(type,leftValue,rightValue) {
-    //TODO: Implement type checking or eh?
     switch(type) {
         case CMP_EQUAL:
-            return truthEvaluation(leftValue) === truthEvaluation(rightValue);
+            return leftValue === rightValue;
         case CMP_NOT_EQUAL:
-            return truthEvaluation(leftValue) !== truthEvaluation(rightValue);
+            return leftValue !== rightValue;
         case CMP_GREATER_THAN:
             return leftValue > rightValue;
         case CMP_LESS_THAN:
@@ -267,6 +362,14 @@ function comparisonEvaluation(type,leftValue,rightValue) {
             throw SyntaxError(`Comparison type '${statementOrBlock.imp.type}' is not recognized`);
     }
 }
+function processVariableDeletion(statementOrBlock,blockScope) {
+    const scopeResult = reverseScopeSearch(statementOrBlock.imp.name,blockScope);
+    if(scopeResult.found) {
+        delete scopeResult.scope[statementOrBlock.imp.name];
+    } else {
+        throw ReferenceError(`Variable or function '${statementOrBlock.imp.name}' not found in enclosing scopes`);
+    }
+}
 function processComparison(statementOrBlock,blockScope) {
     let leftValue = processComparisonValue(statementOrBlock.imp.left,blockScope);
     let rightValue = processComparisonValue(statementOrBlock.imp.right,blockScope);
@@ -279,16 +382,117 @@ function processScopeBlock(statementOrBlock,blockScope) {
         throw SyntaxError(MISSING_SCOPE_CODE);
     }
 }
-//TODO all of these bad boys
 function processEnumerableChange(statementOrBlock,blockScope) {
+    switch(statementOrBlock.imp.type) {
+        case ENM_CHANGE_ADD_START:
+            const value = processVariableForEnumerable(statementOrBlock,blockScope);
+            processGenericEnumerableProperty(statementOrBlock,blockScope,value,"unshift");
+            break;
+        case ENM_CHANGE_DEL_START:
+            processGenericEnumerableProperty(statementOrBlock,blockScope,null,"shift");
+            break;
+        case ENM_CHANGE_ADD_END:
+            const value = processVariableForEnumerable(statementOrBlock,blockScope);
+            processGenericEnumerableProperty(statementOrBlock,blockScope,value,"push");
+            break;
+        case ENM_CHANGE_DEL_END:
+            processGenericEnumerableProperty(statementOrBlock,blockScope,null,"pop");
+            break;
+        case ENM_CHANGE_ADD_IDX:
+            if(statementOrBlock.imp.index !== undefined) {
+                const value = processVariableForEnumerable(statementOrBlock,blockScope);
+                processGenericEnumerableProperty(
+                    statementOrBlock,
+                    blockScope,
+                    value,
+                    "insert",
+                    statementOrBlock.imp.index
+                );
+            } else {
+                throw Error();
+            }
+            break;
+        case ENM_CHANGE_DEL_IDX:
+            if(statementOrBlock.imp.index !== undefined) {
+                processGenericEnumerableProperty(
+                    statementOrBlock,
+                    blockScope,
+                    statementOrBlock.imp.index,
+                    "delete"
+                );
+            } else {
+                throw Error();
+            }
+            break;
+    }
 }
 function processGetEnumerableIndex(statementOrBlock,blockScope) {
+    if(statementOrBlock.imp.index !== undefined) {
+        processGenericEnumerableProperty(
+            statementOrBlock,
+            blockScope,
+            statementOrBlock.imp.index,
+            "get"
+        );
+    } else {
+        throw Error();
+    }
+}
+
+function processGenericEnumerableProperty(statementOrBlock,blockScope,value,method,...parameters) {
+    if(value === undefined) {
+        throw Error();
+    }
+    const variableName = statementOrBlock.imp.name;
+    const searchResult = reverseScopeSearch(variableName,blockScope);
+    if(searchResult.found) {
+        if(searchResult.value !== undefined) {
+            if(searchResult.value.type === ENUMERABLE_TYPE_CODE) {
+                blockScope.__internal__.valueRegister = searchResult.value.container[method](value,...parameters);
+            } else {
+                throw Error();
+            }
+        } else {
+            throw Error();
+        }
+    } else {
+        throw Error();
+    }
+}
+function processVariableForEnumerable(statementOrBlock,blockScope) {
+    let value;
+    if(statementOrBlock.imp.src !== undefined) {
+        const variableSearch = reverseScopeSearch(statementOrBlock.imp.src,blockScope);
+        if(variableSearch.found) {
+            if(variableSearch.value !== undefined) {
+                value = variableSearch.value;
+            } else {
+                throw Error();
+            }
+        } else {
+            throw Error();
+        }
+    } else if(statementOrBlock.imp.value !== undefined) {
+        value = statementOrBlock.imp.value;
+    } else {
+        if(blockScope.__internal__.valueRegister !== undefined) {
+            value = blockScope.__internal__.valueRegister;
+        } else {
+            throw Error();
+        }
+    }
+    return value;
 }
 function processGetEnumerableSize(statementOrBlock,blockScope) {
+    processGenericEnumerableProperty(statementOrBlock,blockScope,null,"size");
 }
 function processEnumerableContains(statementOrBlock,blockScope) {
+    const value = processVariableForEnumerable(statementOrBlock,blockScope);
+    processGenericEnumerableProperty(statementOrBlock,blockScope,value,"contains");
 }
 function processGetEnumerableValueCount(statementOrBlock,blockScope) {
+    const value = processVariableForEnumerable(statementOrBlock,blockScope);
+    processGenericEnumerableProperty(statementOrBlock,blockScope,value,"countOf");
 }
 function executeBlock(data,parentScope,parameterizer) {
     const scopeLevel = parentScope ? parentScope.__internal__.level + 1 : 0;
@@ -379,6 +583,9 @@ function executeBlock(data,parentScope,parameterizer) {
                 break;
             case ENM_CHANGE_OP_CODE:
                 processEnumerableChange(statementOrBlock,blockScope);
+                break;
+            case DELETE_OP_CODE:
+                processVariableDeletion(statementOrBlock,blockScope);
                 break;
         }
     };
