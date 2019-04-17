@@ -14,14 +14,20 @@ function runTests(raw=false) {
     tests.forEach(test => {
         try {
             executeScript(test.code);
-            console.log(`${test.name} passed :)`);
+            const message = `${test.name} passed :)`;
+            console.log(message);
+            output(message,"green");
             passed++;
         } catch(exception) {
             console.error(exception);
-            console.log(`${test.name} failed :(`);
+            const message = `${test.name} failed :(`;
+            console.log(message);
+            output(message,"red");
         }
     });
-    console.log(`${passed}/${tests.length} test${tests.length !== 1 ? "s" : ""} survived its execution (${(passed/tests.length*100).toFixed(1)}%)`);
+    if(tests.length !== 1) {
+        console.log(`${passed}/${tests.length} tests survived their execution (${(passed/tests.length*100).toFixed(1)}%)`);
+    }
 }
 
 const accumlationTest = [
@@ -126,10 +132,20 @@ const accumlationTest = [
 
 const jumpTest = [
     OP_GEN.functionBlock("test_function",[
-        OP_GEN.return_ByValue(true)
+        OP_GEN.return_ByValue(false)
     ]),
-    OP_GEN.conditionalJump()
-]
+    OP_GEN.execute("test_function"),
+    OP_GEN.conditionalJump(1,3,false),
+
+    //con-1
+    OP_GEN.setRegister_ByValue("Test function returned true"),
+    OP_GEN.jump(2,false),
+    //con-2
+    OP_GEN.setRegister_ByValue("Test function returned false"),
+
+    OP_GEN.execute("output")
+];
 
 registerTest("Accumulation test",accumlationTest);
-runTests(true);
+registerTest("Jump test",jumpTest);
+runTests();

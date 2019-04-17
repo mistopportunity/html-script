@@ -15,6 +15,29 @@
 <body>
     <h1>output</h1>
     <div id="output"></div>
+    <script>
+    const outputElement = document.getElementById("output");
+    function output(text,color) {
+        const paragraph = document.createElement("p");
+        paragraph.appendChild(document.createTextNode(text));
+        outputElement.appendChild(paragraph);
+        if(color) {
+            switch(color) {
+                default:
+                    return;
+                case "red":
+                    break;
+                case "green":
+                    color = "rgb(0,255,24)";
+                    break;
+            }
+            paragraph.style.backgroundColor = "black";
+            paragraph.style.color = color;
+            paragraph.style.textDecoration = "underline";
+        }
+    }
+    </script>
+
     <script src="operation-codes.js"></script>
     <script src="operation-generator.js"></script>
 

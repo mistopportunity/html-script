@@ -1,17 +1,39 @@
 const OP_GEN = new (function(){
+//================================================================================
+// These four functions define the root data structure of all operations.
+// They exist for easy modifiations to the IL that would otherwise be hell to do.
+//================================================================================
+    function basicOperation(op,imp) {
+        return {
+            op:op,
+            imp:imp
+        }
+    }
+    function operationOnly(op) {
+        return {
+            op:op
+        }
+    }
+    function setImp(op,imp) {
+        op.imp = imp;
+    }
+    function getImp(op) {
+        return op.imp;
+    }
+//================================================================================
+//================================================================================
+
     function getBasicJumpType(indexIsBaked) {
         return indexIsBaked ? STATIC_JUMP_TYPE : DYNAM_JUMP_TYPE;
     }
+
     this.functionBlock = function functionBlockGenerator(name,code,...parameters) {
-        return {
-            op: DECLARE_OP_CODE,
-            imp: {
-                name:name,
-                type:FUNCTION_TYPE_CODE,
-                code:code,
-                parameters:parameters
-            }
-        }
+        return basicOperation(DECLARE_OP_CODE,{
+            name:name,
+            type:FUNCTION_TYPE_CODE,
+            code:code,
+            parameters:parameters
+        });
     };
     this.conditionalJump = function conditionalJumpGenerator(trueIndex,falseIndex,indexIsBaked) {
         const jumpType = getBasicJumpType(indexIsBaked);
@@ -23,45 +45,25 @@ const OP_GEN = new (function(){
             index: falseIndex,
             type: jumpType
         };
-        return {
-            op: CON_JUMP_OP_CODE,
-            imp: {
-                true:trueJumpBlock,
-                false:falseJumpBlock
-            }
-        }
+        return basicOperation(CON_JUMP_OP_CODE,{
+            true:trueJumpBlock,
+            false:falseJumpBlock
+        });
     };
     this.jump = function jumpGenerator(index,indexIsBaked) {
-        return {
-            op: JUMP_OP_CODE,
-            imp: {
-                index:index,
-                type: getBasicJumpType(indexIsBaked)
-            }
-        }
+        return basicOperation(JUMP_OP_CODE,{
+            index:index,
+            type: getBasicJumpType(indexIsBaked)
+        });
     };
     this.break = function breakGenerator() {
-        return {
-            op: BREAK_OP_CODE
-        }
+        return operationOnly(BREAK_OP_CODE);
     };
     this.execute = function executeGenerator(functionName) {
-        return {
-            op: EXECUTE_OP_CODE,
-            imp: {
-                name: functionName
-            }
-        }
+        return basicOperation(EXECUTE_OP_CODE,{
+            name: functionName
+        });
     };
-    function setFunctionParameterGenerator(imp) {
-        const operation = {
-            op: SET_PARAMETER_OP_CODE
-        }
-        if(imp) {
-            operation.imp = imp;
-        }
-        return operation;
-    }
     this.setFunctionParameterByRegister = setFunctionParameterGenerator;
     this.setFunctionParameter_ByValue = value => setFunctionParameterGenerator({
         value:value
@@ -70,52 +72,57 @@ const OP_GEN = new (function(){
         name:variableName
     });
     this.variableDeclaration = function variableDeclarationGenerator(variableName) {
-        return {
-            op: DECLARE_OP_CODE,
-            imp: {
-                type: VARIABLE_TYPE_CODE,
-                name: variableName
-            }
-        }
+        return basicOperation(DECLARE_OP_CODE,{
+            type: VARIABLE_TYPE_CODE,
+            name: variableName
+        });
     };
     function arrayDeclarationGenerator(variableName,values) {
-        const operation = {
-            op: DECLARE_OP_CODE,
-            imp: {
-                type: ENUMERABLE_TYPE_CODE,
-                name: variableName,
-            }
-        }
+        const operation = basicOperation(DECLARE_OP_CODE,{
+            type: ENUMERABLE_TYPE_CODE,
+            name: variableName
+        });
         if(values) {
-            operation.imp.values = values;
+            getImp(operation).values = values;
         }
         return operation;
     };
+    function namedImpOperation(operation,variableName,imp) {
+        const operation = operationOnly(SET_OP_CODE);
+        if(imp) {
+            setImp(operation,imp);
+        } else {
+            setImp(operation,{});
+        }
+        getImp(operation).name = variableName;
+        return operation;
+    }
+    function operationWithOptionalImp(operation,imp) {
+        operation = operationOnly(operation);
+        if(imp) {
+            setImp(operation,imp);
+        }
+        return operation;
+    }
+
+    const returnGenerator = imp => operationWithOptionalImp(RETURN_OP_CODE,imp);
+    const setFunctionParameterGenerator = imp => operationWithOptionalImp(SET_PARAMETER_OP_CODE,imp);
+
     this.enumerableDeclaration_Empty = variableName => arrayDeclarationGenerator(variableName,[]);
     this.enumerableDeclaration_FromRegister = variableName => arrayDeclarationGenerator(variableName,null);
     this.enumerableDeclaration_FromValues = arrayDeclarationGenerator;
 
-    function setVariableValueGenerator(variableName,imp) {
-        const operation = {
-            op: SET_OP_CODE
-        }
-        if(imp) {
-            operation.imp = imp;
-        } else {
-            operation.imp = {};
-        }
-        operation.imp.name = variableName;
-        return operation;
-    }
+    const setVariableValueGenerator = (variableName,imp) => namedImpOperation(SET_OP_CODE,variableName,imp);
+    const enumerableAtIndexGenerator = (variableName,imp) => namedImpOperation(GET_INDEX_OP_CODE,variableName,imp);
+    const enumerableContainsGenerator = (variableName,imp) => namedImpOperation(CONTAINS_OP_CODE,variableName,imp);
+    const enumerableChangeGenerator = (variableName,imp) => namedImpOperation(ENM_CHANGE_OP_COD,variableName,imp);
+
     this.setVariable_ByRegister = variableName => setVariableValueGenerator(variableName);
     this.setVariable_ByValue = (variableName,value) => setVariableValueGenerator(variableName,{value:value});
     this.setVariable_ByVariable = (variableName,sourceName) => setVariableValueGenerator(variableName,{src:sourceName});
 
     function setRegisterGenerator(imp) {
-        return {
-            op: REGISTER_OP_CODE,
-            imp:imp
-        }
+        return basicOperation(REGISTER_OP_CODE,imp);
     }
 
     this.setRegister_ByValue = value => setRegisterGenerator({value:value});
@@ -153,42 +160,29 @@ const OP_GEN = new (function(){
             default:
                 throw SyntaxError(`Unrecognized math operation sign '${sign}'`);
         }
-        const operation = {
-            op: operationCode,
-            imp: imp
-        }
+        const operation = basicOperation(operationCode,imp);
         return operation;
     }
 
     this.modifyRegister_ByVariable = (sign,variableName) => basicRegisterMathGenerator(sign,{name:variableName});
     this.modifyRegister_ByValue = (sign,value) => basicRegisterMathGenerator(sign,{value:value});
 
-    function returnGenerator(imp) {
-        const operation = {
-            op: RETURN_OP_CODE
-        }
-        if(imp) {
-            operation.imp = imp;
-        }
-        return operation;
-    }
+
+
 
     this.return = returnGenerator;
     this.return_ByValue = value => returnGenerator({value:value});
     this.return_ByVariable = variableName => returnGenerator({variableName:variableName});
 
     function comparisonGenerator(type,leftName,rightName) {
-        const operation = {
-            op: OP_GEN,
-            imp: {
-                type: type
-            }
-        }
+        const operation = basicOperation(COMPARE_OP_CODE,{
+            type: type
+        });
         if(leftName) {
-            operation.left = leftName;
+            getImp(operation).left = leftName;
         }
         if(rightRight) {
-            operation.right = rightName;
+            getImp(operation).right = rightName;
         }
         return operation;
     }
@@ -198,39 +192,10 @@ const OP_GEN = new (function(){
     this.compareVariable_ToRegister = (type,leftVariableName) => (type,leftVariableName,null);
 
     this.enumerableSizeToRegister = function enumerableSizeGenerator(variableName) {
-        return {
-            op: GET_SIZE_OP_CODE,
-            imp: {
-                name: variableName
-            }
-        }
+        return basicOperation(GET_SIZE_OP_CODE,{
+            name: variableName
+        });
     };
-
-    function enumerableAtIndexGenerator(variableName,imp) {
-        const operation = {
-            op: GET_INDEX_OP_CODE
-        }
-        if(imp) {
-            operation.imp = imp;
-        } else {
-            imp = {};
-        }
-        imp.name = variableName;
-        return operation;
-    }
-
-    function enumerableContainsGenerator(variableName,imp) {
-        const operation = {
-            op: CONTAINS_OP_CODE
-        }
-        if(imp) {
-            operation.imp = imp;
-        } else {
-            imp = {};
-        }
-        imp.name = variableName;
-        return operation;
-    }
 
     this.enumerableAtIndexToRegister_FromRegister = variableName => enumerableAtIndexGenerator(variableName);
     this.enumerableContainsToRegister_FromRegister = variableName => enumerableContainsGenerator(variableName); 
@@ -246,19 +211,6 @@ const OP_GEN = new (function(){
     this.enumerableContainsToRegister_FromVariable = (variableName,sourceName) => enumerableContainsGenerator(variableName,{
         src:sourceName
     });
-
-    function enumerableChangeGenerator(variableName,imp) {
-        const operation = {
-            op: ENM_CHANGE_OP_CODE
-        }
-        if(imp) {
-            operation.imp = imp;
-        } else {
-            operation.imp = {};
-        }
-        operation.imp.name = variableName;
-        return operation;
-    }
 
     this.enumerableDeleteStart = variableName => enumerableChangeGenerator(variableName,{
         type: ENM_CHANGE_DEL_START
@@ -311,30 +263,21 @@ const OP_GEN = new (function(){
     });
 
     this.enumerableValueCount = function enumerableValueCountGenerator(variableName,valueName) {
-        return {
-            op: GET_ENM_VALUE_COUNT,
-            imp: {
-                name: variableName,
-                value: valueName
-            }
-        }
+        return basicOperation(GET_ENM_VALUE_COUNT,{
+            name: variableName,
+            value: valueName
+        });
     }
 
     this.scopeBlock = function scopeBlockGenerator(code) {
-        return {
-            op: BLOCK_OP_CODE,
-            imp: {
-                code: code
-            }
-        }
+        return basicOperation(BLOCK_OP_CODE,{
+            code: code
+        });
     }
 
     this.delete = function deleteGenerator(variableName) {
-        return {
-            op: DELETE_OP_CODE,
-            imp: {
-                name: variableName
-            }
-        }
+        return basicOperation(DELETE_OP_CODE,{
+            name: variableName
+        });
     }
 })();

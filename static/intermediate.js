@@ -6,13 +6,6 @@ const MISSING_SCOPE_CODE = "Scope block operation is missing a code block";
 const ARRAY_EMPTY_ERROR = "This operation is invalid because the enumerable type is empty";
 const ARRAY_BOUNDS_ERROR = "The fabled index out of bounds error";
 
-const outputElement = document.getElementById("output");
-function output(text) {
-    const paragraph = document.createElement("p");
-    paragraph.appendChild(document.createTextNode(text));
-    outputElement.appendChild(paragraph);
-}
-
 function reverseScopeSearch(name,scope) {
     let searchBlock = scope;
     let lookupValue = undefined;
@@ -390,19 +383,19 @@ function processEnumerableChange(statementOrBlock,blockScope) {
     switch(statementOrBlock.imp.type) {
         case ENM_CHANGE_ADD_START: {
                 const value = processVariableForEnumerable(statementOrBlock,blockScope);
-                processGenericEnumerableProperty(statementOrBlock,blockScope,value,"unshift");
+                processGenericEnumerableProperty(statementOrBlock,blockScope,"unshift",value);
             }
             break;
         case ENM_CHANGE_DEL_START:
-            processGenericEnumerableProperty(statementOrBlock,blockScope,null,"shift");
+            processGenericEnumerableProperty(statementOrBlock,blockScope,"shift",null);
             break;
         case ENM_CHANGE_ADD_END: {
                 const value = processVariableForEnumerable(statementOrBlock,blockScope);
-                processGenericEnumerableProperty(statementOrBlock,blockScope,value,"push");
+                processGenericEnumerableProperty(statementOrBlock,blockScope,"push",value);
             }
             break;
         case ENM_CHANGE_DEL_END:
-            processGenericEnumerableProperty(statementOrBlock,blockScope,null,"pop");
+            processGenericEnumerableProperty(statementOrBlock,blockScope,"pop",null);
             break;
         case ENM_CHANGE_ADD_IDX:
             if(statementOrBlock.imp.index !== undefined) {
@@ -410,8 +403,8 @@ function processEnumerableChange(statementOrBlock,blockScope) {
                 processGenericEnumerableProperty(
                     statementOrBlock,
                     blockScope,
-                    value,
                     "insert",
+                    value,
                     statementOrBlock.imp.index
                 );
             } else {
@@ -423,8 +416,8 @@ function processEnumerableChange(statementOrBlock,blockScope) {
                 processGenericEnumerableProperty(
                     statementOrBlock,
                     blockScope,
-                    statementOrBlock.imp.index,
-                    "delete"
+                    "delete",
+                    statementOrBlock.imp.index
                 );
             } else {
                 throw Error();
@@ -437,16 +430,16 @@ function processGetEnumerableIndex(statementOrBlock,blockScope) {
         processGenericEnumerableProperty(
             statementOrBlock,
             blockScope,
-            statementOrBlock.imp.index,
-            "get"
+            "get",
+            statementOrBlock.imp.index
         );
     } else {
         throw Error();
     }
 }
 
-function processGenericEnumerableProperty(statementOrBlock,blockScope,value,method,...parameters) {
-    if(value === undefined) {
+function processGenericEnumerableProperty(statementOrBlock,blockScope,method,...parameters) {
+    if(parameters[0] === undefined) {
         throw Error();
     }
     const variableName = statementOrBlock.imp.name;
@@ -454,7 +447,7 @@ function processGenericEnumerableProperty(statementOrBlock,blockScope,value,meth
     if(searchResult.found) {
         if(searchResult.value !== undefined) {
             if(searchResult.value.type === ENUMERABLE_TYPE_CODE) {
-                blockScope.__internal__.valueRegister = searchResult.value.container[method](value,...parameters);
+                blockScope.__internal__.valueRegister = searchResult.value.container[method](...parameters);
             } else {
                 throw Error();
             }
@@ -490,15 +483,15 @@ function processVariableForEnumerable(statementOrBlock,blockScope) {
     return value;
 }
 function processGetEnumerableSize(statementOrBlock,blockScope) {
-    processGenericEnumerableProperty(statementOrBlock,blockScope,null,"size");
+    processGenericEnumerableProperty(statementOrBlock,blockScope,"size",null);
 }
 function processEnumerableContains(statementOrBlock,blockScope) {
     const value = processVariableForEnumerable(statementOrBlock,blockScope);
-    processGenericEnumerableProperty(statementOrBlock,blockScope,value,"contains");
+    processGenericEnumerableProperty(statementOrBlock,blockScope,"contains",value);
 }
 function processGetEnumerableValueCount(statementOrBlock,blockScope) {
     const value = processVariableForEnumerable(statementOrBlock,blockScope);
-    processGenericEnumerableProperty(statementOrBlock,blockScope,value,"countOf");
+    processGenericEnumerableProperty(statementOrBlock,blockScope,"countOf",value);
 }
 function executeBlock(data,parentScope,parameterizer) {
     const scopeLevel = parentScope ? parentScope.__internal__.level + 1 : 0;
@@ -595,7 +588,6 @@ function executeBlock(data,parentScope,parameterizer) {
                 break;
         }
     };
-    console.log(blockScope);
 }
 function executeScript(scriptData) {
     executeBlock(scriptData,null,null);
