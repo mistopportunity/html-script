@@ -1,35 +1,7 @@
-const FUNCTION_TYPE_CODE = "fnc";
-const LIST_TYPE_CODE = "lst";
-const ARRAY_TYPE_CODE = "arr";
-const VARIABLE_TYPE_CODE = "var";
-
-const MATH_CODE_ADD = "add";
-const MATH_CODE_SUBTRACT = "sub";
-const MATH_CODE_MULTIPLY = "mtp";
-const MATH_CODE_DIVIDE = "div";
-
-const OUTPUT_FUNCTION_NAME = "output";
-const JUMP_OP_CODE = "jmp";
-const CON_JUMP_OP_CODE = "cjmp";
-const BREAK_OP_CODE = "brk";
-
-const DECLARE_OP_CODE = "dec";
-
-const SET_OP_CODE = "set";
-const SET_PARAMETER_OP_CODE = "prm";
-const REGISTER_OP_CODE = "reg";
-
-const EXECUTE_OP_CODE = "exe";
-const RETURN_OP_CODE = "ret";
-
-const STATIC_JUMP_TYPE = "stc";
-const DYNAM_JUMP_TYPE = "dyn";
-
-function getBasicJumpType(indexIsBaked) {
-    return indexIsBaked ? STATIC_JUMP_TYPE : DYNAM_JUMP_TYPE;
-}
-
 const OP_GEN = new (function(){
+    function getBasicJumpType(indexIsBaked) {
+        return indexIsBaked ? STATIC_JUMP_TYPE : DYNAM_JUMP_TYPE;
+    }
     this.functionBlock = function functionBlockGenerator(name,code,...parameters) {
         return {
             op: DECLARE_OP_CODE,
@@ -207,4 +179,23 @@ const OP_GEN = new (function(){
     this.returnByValue = value => returnGenerator({value:value});
     this.returnByVariable = variableName => returnGenerator({variableName:variableName});
 
+    function comparisonGenerator(type,leftName,rightName) {
+        const operation = {
+            op: OP_GEN,
+            imp: {
+                type: type
+            }
+        }
+        if(leftName) {
+            operation.left = leftName;
+        }
+        if(rightRight) {
+            operation.right = rightName;
+        }
+        return operation;
+    }
+    this.compareRegisterToVariable = (type,rightVariableName) => comparisonGenerator(type,null,rightVariableName);
+    this.compareRegisterToRegister = type => comparisonGenerator(type,null,null);
+    this.compareVariableToVariable = (type,leftVariableName,rightVariableName) => comparisonGenerator(type,leftVariableName,rightVariableName);
+    this.compareVariableToRegister = (type,leftVariableName) => (type,leftVariableName,null);
 })();

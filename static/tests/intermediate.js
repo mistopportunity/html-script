@@ -121,12 +121,10 @@ const accumlationTest = [
 ];
 
 const jumpTest = [
-    {
-        op: REGISTER_OP_CODE,
-        imp: {
-            value:
-        }
-    }
+    OP_GEN.functionBlock("test_function",[
+        OP_GEN.returnByValue(true)
+    ]),
+    OP_GEN.conditionalJump()
 ]
 
 registerTest("Accumulation test",accumlationTest);

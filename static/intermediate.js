@@ -222,7 +222,47 @@ function processJumpBlock(block,index) {
         throw SyntaxError(MISSING_JUMP_PARAMETERS);
     }
 }
-
+function processComparisonValue(value,blockScope) {
+    if(value === undefined) {
+        return blockScope.__internal__.valueRegister;
+    } else {
+        const searchResult = reverseScopeSearch(value,blockScope);
+        if(searchResult.found) {
+            if(searchResult.value !== undefined) {
+                return searchResult.value;
+            } else {
+                throw ReferenceError(`Variable '${value}' has no value`);
+            }
+        } else {
+            throw ReferenceError(`Variable '${value}' not found in enclosing scopes`);
+        }
+    }
+}
+function processComparison(statementOrBlock,blockScope) {
+    let leftValue = processComparisonValue(statementOrBlock.imp.left,blockScope);
+    let rightValue = processComparisonValue(statementOrBlock.imp.right,blockScope);
+    //Implement type checking or eh?
+    switch(statementOrBlock.imp.type) {
+        case CMP_EQUAL:
+            return truthEvaluation(leftValue) === truthEvaluation(rightValue);
+        case CMP_NOT_EQUAL:
+            return truthEvaluation(leftValue) !== truthEvaluation(rightValue);
+        case CMP_GREATER_THAN:
+            return leftValue > rightValue;
+        case CMP_LESS_THAN:
+            return leftValue < rightValue;
+        case CMP_GREATER_OR_EQUAL:
+            return leftValue >= rightValue;
+        case CMP_LESS_OR_EQUAL:
+            return leftValue <= rightValue;
+        case CMP_OR:
+            return truthEvaluation(leftValue) || truthEvaluation(rightValue);
+        case CMP_AND:
+            return truthEvaluation(leftValue) && truthEvaluation(rightValue);
+        default:
+            throw SyntaxError(`Comparison type '${statementOrBlock.imp.type}' is not recognized`);
+    }
+}
 function executeBlock(data,parentScope,parameterizer) {
     const scopeLevel = parentScope ? parentScope.__internal__.level + 1 : 0;
     const blockScope = {
@@ -291,6 +331,9 @@ function executeBlock(data,parentScope,parameterizer) {
             case MATH_CODE_MULTIPLY:
             case MATH_CODE_DIVIDE:
                 processBasicArithmetic(statementOrBlock,blockScope);
+                break;
+            case COMPARE_OP_CODE:
+                processComparison(statementOrBlock,blockScope);
                 break;
         }
     };
