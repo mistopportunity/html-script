@@ -22,6 +22,26 @@ const OP_GEN = new (function(){
     }
 //================================================================================
 //================================================================================
+    function namedImpOperation(operationName,variableName,imp) {
+        const operation = operationOnly(operationName);
+        if(imp) {
+            setImp(operation,imp);
+        } else {
+            setImp(operation,{});
+        }
+        getImp(operation).name = variableName;
+        return operation;
+    }
+    function operationWithOptionalImp(operationName,imp) {
+        const operation = operationOnly(operationName);
+        if(imp) {
+            setImp(operation,imp);
+        }
+        return operation;
+    }
+
+    const returnGenerator = imp => operationWithOptionalImp(RETURN_OP_CODE,imp);
+    const setFunctionParameterGenerator = imp => operationWithOptionalImp(SET_PARAMETER_OP_CODE,imp);
 
     function getBasicJumpType(indexIsBaked) {
         return indexIsBaked ? STATIC_JUMP_TYPE : DYNAM_JUMP_TYPE;
@@ -64,7 +84,7 @@ const OP_GEN = new (function(){
             name: functionName
         });
     };
-    this.setFunctionParameterByRegister = setFunctionParameterGenerator;
+    this.setFunctionParameter_ByRegister = setFunctionParameterGenerator;
     this.setFunctionParameter_ByValue = value => setFunctionParameterGenerator({
         value:value
     });
@@ -87,26 +107,6 @@ const OP_GEN = new (function(){
         }
         return operation;
     };
-    function namedImpOperation(operation,variableName,imp) {
-        const operation = operationOnly(SET_OP_CODE);
-        if(imp) {
-            setImp(operation,imp);
-        } else {
-            setImp(operation,{});
-        }
-        getImp(operation).name = variableName;
-        return operation;
-    }
-    function operationWithOptionalImp(operation,imp) {
-        operation = operationOnly(operation);
-        if(imp) {
-            setImp(operation,imp);
-        }
-        return operation;
-    }
-
-    const returnGenerator = imp => operationWithOptionalImp(RETURN_OP_CODE,imp);
-    const setFunctionParameterGenerator = imp => operationWithOptionalImp(SET_PARAMETER_OP_CODE,imp);
 
     this.enumerableDeclaration_Empty = variableName => arrayDeclarationGenerator(variableName,[]);
     this.enumerableDeclaration_FromRegister = variableName => arrayDeclarationGenerator(variableName,null);
