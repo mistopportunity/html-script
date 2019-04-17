@@ -238,11 +238,9 @@ function processComparisonValue(value,blockScope) {
         }
     }
 }
-function processComparison(statementOrBlock,blockScope) {
-    let leftValue = processComparisonValue(statementOrBlock.imp.left,blockScope);
-    let rightValue = processComparisonValue(statementOrBlock.imp.right,blockScope);
-    //Implement type checking or eh?
-    switch(statementOrBlock.imp.type) {
+function comparisonEvaluation(type,leftValue,rightValue) {
+    //TODO: Implement type checking or eh?
+    switch(type) {
         case CMP_EQUAL:
             return truthEvaluation(leftValue) === truthEvaluation(rightValue);
         case CMP_NOT_EQUAL:
@@ -262,6 +260,11 @@ function processComparison(statementOrBlock,blockScope) {
         default:
             throw SyntaxError(`Comparison type '${statementOrBlock.imp.type}' is not recognized`);
     }
+}
+function processComparison(statementOrBlock,blockScope) {
+    let leftValue = processComparisonValue(statementOrBlock.imp.left,blockScope);
+    let rightValue = processComparisonValue(statementOrBlock.imp.right,blockScope);
+    blockScope.__internal__.valueRegister = comparisonEvaluation(statementOrBlock.imp.type,leftValue,rightValue);
 }
 function executeBlock(data,parentScope,parameterizer) {
     const scopeLevel = parentScope ? parentScope.__internal__.level + 1 : 0;
