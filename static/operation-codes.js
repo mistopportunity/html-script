@@ -1,6 +1,5 @@
 const FUNCTION_TYPE_CODE = "fnc";
-const LIST_TYPE_CODE = "lst";
-const ARRAY_TYPE_CODE = "arr";
+const ENUMERABLE_TYPE_CODE = "enm";
 const VARIABLE_TYPE_CODE = "var";
 
 const CMP_EQUAL = "eq";
@@ -36,3 +35,20 @@ const RETURN_OP_CODE = "ret";
 
 const STATIC_JUMP_TYPE = "stc";
 const DYNAM_JUMP_TYPE = "dyn";
+
+const GET_INDEX_OP_CODE = "geti";
+const CONTAINS_OP_CODE = "cont";
+const GET_SIZE_OP_CODE = "getl";
+
+const GET_ENM_VALUE_COUNT = "getv";
+
+const BLOCK_OP_CODE = "blk";
+
+const ENM_CHANGE_OP_CODE = "enmc";
+const ENM_CHANGE_ADD_START = "eas";
+const ENM_CHANGE_DEL_START = "eds";
+const ENM_CHANGE_ADD_END = "ead";
+const ENM_CHANGE_DEL_END = "ede";
+const ENM_CHANGE_ADD_IDX = "eax";
+const ENM_CHANGE_DEL_IDX = "edx";
+const ENUM_CHANGE_DEL_VAL = "edn";

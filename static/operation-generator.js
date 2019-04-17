@@ -6,8 +6,8 @@ const OP_GEN = new (function(){
         return {
             op: DECLARE_OP_CODE,
             imp: {
-                name: name,
-                type: FUNCTION_TYPE_CODE,
+                name:name,
+                type:FUNCTION_TYPE_CODE,
                 code:code,
                 parameters:parameters
             }
@@ -63,10 +63,10 @@ const OP_GEN = new (function(){
         return operation;
     }
     this.setFunctionParameterByRegister = setFunctionParameterGenerator;
-    this.setFunctionParameterByValue = value => setFunctionParameterGenerator({
+    this.setFunctionParameter_ByValue = value => setFunctionParameterGenerator({
         value:value
     });
-    this.setFunctionParameterByVariable = variableName => setFunctionParameterGenerator({
+    this.setFunctionParameter_ByVariable = variableName => setFunctionParameterGenerator({
         name:variableName
     });
     this.variableDeclaration = function variableDeclarationGenerator(variableName) {
@@ -78,26 +78,23 @@ const OP_GEN = new (function(){
             }
         }
     };
-    this.arrayDeclaration = function arrayDeclarationGenerator(arrayName) {
-        return {
+    function arrayDeclarationGenerator(variableName,values) {
+        const operation = {
             op: DECLARE_OP_CODE,
             imp: {
                 type: ARRAY_TYPE_CODE,
-                name: variableName
-                //TODO
+                name: variableName,
             }
         }
-    };
-    this.listDeclaration = function listDeclarationGenerator(listName) {
-        return {
-            op: DECLARE_OP_CODE,
-            imp: {
-                type: LIST_TYPE_CODE,
-                name: variableName
-                //TODO
-            }
+        if(values) {
+            operation.imp.values = values;
         }
+        return operation;
     };
+    this.enumerableDeclaration_Empty = variableName => arrayDeclarationGenerator(variableName,[]);
+    this.enumerableDeclaration_FromRegister = variableName => arrayDeclarationGenerator(variableName,null);
+    this.enumerableDeclaration_FromValues = arrayDeclarationGenerator;
+
     function setVariableValueGenerator(variableName,imp) {
         const operation = {
             op: SET_OP_CODE
@@ -110,8 +107,8 @@ const OP_GEN = new (function(){
         operation.imp.name = variableName;
         return operation;
     }
-    this.setVariableByRegister = variableName => setVariableValueGenerator(variableName);
-    this.setVariableByValue = (variableName,value) => setVariableValueGenerator(variableName,{value:value});
+    this.setVariable_ByRegister = variableName => setVariableValueGenerator(variableName);
+    this.setVariable_ByValue = (variableName,value) => setVariableValueGenerator(variableName,{value:value});
 
     function setRegisterGenerator(imp) {
         return {
@@ -120,8 +117,8 @@ const OP_GEN = new (function(){
         }
     }
 
-    this.setRegisterByValue = value => setRegisterGenerator({value:value});
-    this.setRegisterByVariable = variableName => setRegisterGenerator({name:variableName});
+    this.setRegister_ByValue = value => setRegisterGenerator({value:value});
+    this.setRegister_ByVariable = variableName => setRegisterGenerator({name:variableName});
 
     function basicRegisterMathGenerator(sign,imp) {
         let operationCode;
@@ -162,8 +159,8 @@ const OP_GEN = new (function(){
         return operation;
     }
 
-    this.modifyRegisterByVariable = (sign,variableName) => basicRegisterMathGenerator(sign,{name:variableName});
-    this.modifyRegisterByValue = (sign,value) => basicRegisterMathGenerator(sign,{value:value});
+    this.modifyRegister_ByVariable = (sign,variableName) => basicRegisterMathGenerator(sign,{name:variableName});
+    this.modifyRegister_ByValue = (sign,value) => basicRegisterMathGenerator(sign,{value:value});
 
     function returnGenerator(imp) {
         const operation = {
@@ -176,8 +173,8 @@ const OP_GEN = new (function(){
     }
 
     this.return = returnGenerator;
-    this.returnByValue = value => returnGenerator({value:value});
-    this.returnByVariable = variableName => returnGenerator({variableName:variableName});
+    this.return_ByValue = value => returnGenerator({value:value});
+    this.return_ByVariable = variableName => returnGenerator({variableName:variableName});
 
     function comparisonGenerator(type,leftName,rightName) {
         const operation = {
@@ -194,8 +191,151 @@ const OP_GEN = new (function(){
         }
         return operation;
     }
-    this.compareRegisterToVariable = (type,rightVariableName) => comparisonGenerator(type,null,rightVariableName);
-    this.compareRegisterToRegister = type => comparisonGenerator(type,null,null);
-    this.compareVariableToVariable = (type,leftVariableName,rightVariableName) => comparisonGenerator(type,leftVariableName,rightVariableName);
-    this.compareVariableToRegister = (type,leftVariableName) => (type,leftVariableName,null);
+    this.compareRegister_ToVariable = (type,rightVariableName) => comparisonGenerator(type,null,rightVariableName);
+    this.compareRegister_ToRegister = type => comparisonGenerator(type,null,null);
+    this.compareVariable_ToVariable = (type,leftVariableName,rightVariableName) => comparisonGenerator(type,leftVariableName,rightVariableName);
+    this.compareVariable_ToRegister = (type,leftVariableName) => (type,leftVariableName,null);
+
+    this.enumerableSizeToRegister = function enumerableSizeGenerator(variableName) {
+        return {
+            op: GET_SIZE_OP_CODE,
+            imp: {
+                name: variableName
+            }
+        }
+    };
+
+    function enumerableAtIndexGenerator(variableName,imp) {
+        const operation = {
+            op: GET_INDEX_OP_CODE
+        }
+        if(imp) {
+            operation.imp = imp;
+        } else {
+            imp = {};
+        }
+        imp.name = variableName;
+        return operation;
+    }
+
+    function enumerableContainsGenerator(variableName,imp) {
+        const operation = {
+            op: CONTAINS_OP_CODE
+        }
+        if(imp) {
+            operation.imp = imp;
+        } else {
+            imp = {};
+        }
+        imp.name = variableName;
+        return operation;
+    }
+
+    this.enumerableAtIndexToRegister_FromRegister = variableName => enumerableAtIndexGenerator(variableName);
+    this.enumerableContainsToRegister_FromRegister = variableName => enumerableContainsGenerator(variableName); 
+    this.enumerableAtIndexToRegister_FromValue = (variableName,value) => enumerableAtIndexGenerator(variableName,{
+        value:value
+    });
+    this.enumerableContainsToRegister_FromValue = (variableName,value) => enumerableContainsGenerator(variableName,{
+        value:value
+    });
+    this.enumerableAtIndexToRegister_FromVariable = (variableName,sourceName) => enumerableAtIndexGenerator(variableName,{
+        src:sourceName
+    });
+    this.enumerableContainsToRegister_FromVariable = (variableName,sourceName) => enumerableContainsGenerator(variableName,{
+        src:sourceName
+    });
+
+    function enumerableChangeGenerator(variableName,imp) {
+        const operation = {
+            op: ENM_CHANGE_OP_CODE
+        }
+        if(imp) {
+            operation.imp = imp;
+        } else {
+            operation.imp = {};
+        }
+        operation.imp.name = variableName;
+        return operation;
+    }
+
+    this.enumerableDeleteStart = variableName => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_DEL_START
+    });
+    this.enumerableDeleteEnd = variableName => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_DEL_END
+    });
+    this.enumerableDeleteAtIndex = (variableName,index) => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_DEL_IDX,
+        index: index
+    });
+
+    this.enumerableAddStart_FromValue = (variableName,value) => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_START,
+        value: value
+    });
+    this.enumerableAddEnd_FromValue = (variableName,value) => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_END,
+        value: value
+    });
+    this.enumerableAddAt_FromValue = (variableName,value,index) => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_IDX,
+        value: value,
+        index: index
+    });
+
+    this.enumerableAddStart_FromRegister = variableName => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_START
+    });
+    this.enumerableAddEnd_FromRegister = variableName => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_END
+    });
+    this.enumerableAddAt_FromRegister = (variableName,index) => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_IDX,
+        index: index
+    });
+
+    this.enumerableAddStart_FromVariable = (variableName,sourceName) => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_START,
+        src: sourceName
+    });
+    this.enumerableAddEnd_FromVariable = (variableName,sourceName) => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_END,
+        src: sourceName
+    });
+    this.enumerableAddAt_FromVariable = (variableName,sourceName,index) => enumerableChangeGenerator(variableName,{
+        type: ENM_CHANGE_ADD_IDX,
+        index: index,
+        src: sourceName
+    });
+    this.enumerableDeleteByName_FromValue = (variableName,value) => enumerableChangeGenerator(variableName,{
+        type: ENUM_CHANGE_DEL_VAL,
+        value: value
+    });
+    this.enumerableDeleteByName_FromRegister = variableName => enumerableChangeGenerator(variableName,{
+        type: ENUM_CHANGE_DEL_VAL
+    });
+    this.enumerableDeleteByName_FromVariable = (variableName,sourceName) => enumerableChangeGenerator(variableName,{
+        type: ENUM_CHANGE_DEL_VAL,
+        src: sourceName
+    });
+
+    this.enumerableValueCount = function enumerableValueCountGenerator(variableName,valueName) {
+        return {
+            op: GET_ENM_VALUE_COUNT,
+            imp: {
+                name: variableName,
+                value: valueName
+            }
+        }
+    }
+
+    this.scopeBlock = function scopeBlockGenerator(code) {
+        return {
+            op: BLOCK_OP_CODE,
+            imp: {
+                code: code
+            }
+        }
+    }
 })();

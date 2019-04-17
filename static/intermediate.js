@@ -2,6 +2,7 @@ const UNSET_VALUE_REGISTER = "The value register in this scope was never set bef
 const INVALID_OPERATION_CODE = "Invalid operation code";
 const MISSING_JUMP_PARAMETERS = "A jump operation is missing a type or a index in one of its jump blocks";
 const IMPOSSIBLE_TRUTH = "Cannot evaluate the truth of an undefined value";
+const MISSING_SCOPE_CODE = "Scope block operation is missing a code block";
 
 const outputElement = document.getElementById("output");
 function output(text) {
@@ -41,13 +42,19 @@ function processDeclaration(statementOrBlock,blockScope) {
         case VARIABLE_TYPE_CODE:
             blockScope[variableName] = null;
             break;
-        case ARRAY_TYPE_CODE:
-            blockScope[variableName] = [];
-            //TODO
-            break;
-        case LIST_TYPE_CODE:
-            blockScope[variableName] = {};
-            //TODO
+        case ENUMERABLE_TYPE_CODE:
+            blockScope[variableName] = {
+                type: ENUMERABLE_TYPE_CODE,
+                array: [],
+                list: {},
+                lifetimeEntityCount: 0
+            };
+            if(statementOrBlock.imp.values === undefined) {
+
+            } else {
+
+            }
+            //TODO, load start values or values from register enumerable into list
             break;
         case FUNCTION_TYPE_CODE:
             blockScope[variableName] = statementOrBlock.imp;
@@ -108,7 +115,6 @@ function processRegisterSet(statementOrBlock,blockScope) {
     );
     const variableResult = scopeResult.value;
     if(variableResult !== undefined) {
-        //TODO, array length, array index, list contains
         blockScope.__internal__.valueRegister = scopeResult.scope[variableName];
     } else if(scopeResult.found) {
         throw ReferenceError(`Variable '${variableName}' has no value`);
@@ -266,6 +272,24 @@ function processComparison(statementOrBlock,blockScope) {
     let rightValue = processComparisonValue(statementOrBlock.imp.right,blockScope);
     blockScope.__internal__.valueRegister = comparisonEvaluation(statementOrBlock.imp.type,leftValue,rightValue);
 }
+function processScopeBlock(statementOrBlock,blockScope) {
+    if(statementOrBlock.imp && statementOrBlock.imp.code) {
+        executeBlock(statementOrBlock.imp.code,blockScope,null);
+    } else {
+        throw SyntaxError(MISSING_SCOPE_CODE);
+    }
+}
+//TODO all of these bad boys
+function processEnumerableChange(statementOrBlock,blockScope) {
+}
+function processGetEnumerableIndex(statementOrBlock,blockScope) {
+}
+function processGetEnumerableSize(statementOrBlock,blockScope) {
+}
+function processEnumerableContains(statementOrBlock,blockScope) {
+}
+function processGetEnumerableValueCount(statementOrBlock,blockScope) {
+}
 function executeBlock(data,parentScope,parameterizer) {
     const scopeLevel = parentScope ? parentScope.__internal__.level + 1 : 0;
     const blockScope = {
@@ -335,8 +359,26 @@ function executeBlock(data,parentScope,parameterizer) {
             case MATH_CODE_DIVIDE:
                 processBasicArithmetic(statementOrBlock,blockScope);
                 break;
+            case GET_ENM_VALUE_COUNT:
+                processGetEnumerableValueCount(statementOrBlock,blockScope);
+                break;
             case COMPARE_OP_CODE:
                 processComparison(statementOrBlock,blockScope);
+                break;
+            case GET_INDEX_OP_CODE:
+                processGetEnumerableIndex(statementOrBlock,blockScope);
+                break;
+            case CONTAINS_OP_CODE:
+                processEnumerableContains(statementOrBlock,blockScope);
+                break;
+            case GET_SIZE_OP_CODE:
+                processGetEnumerableSize(statementOrBlock,blockScope);
+                break;
+            case BLOCK_OP_CODE:
+                processScopeBlock(statementOrBlock,blockScope);
+                break;
+            case ENM_CHANGE_OP_CODE:
+                processEnumerableChange(statementOrBlock,blockScope);
                 break;
         }
     };
