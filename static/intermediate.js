@@ -260,9 +260,9 @@ function comparisonEvaluation(type,leftValue,rightValue) {
         case CMP_LESS_OR_EQUAL:
             return leftValue <= rightValue;
         case CMP_OR:
-            return truthEvaluation(leftValue) || truthEvaluation(rightValue);
+            return truthEvaluation(leftValue) | truthEvaluation(rightValue);
         case CMP_AND:
-            return truthEvaluation(leftValue) && truthEvaluation(rightValue);
+            return truthEvaluation(leftValue) & truthEvaluation(rightValue);
         default:
             throw SyntaxError(`Comparison type '${statementOrBlock.imp.type}' is not recognized`);
     }
