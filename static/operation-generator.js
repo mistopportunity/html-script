@@ -84,7 +84,7 @@ const OP_GEN = new (function(){
             name: functionName
         });
     };
-    this.setFunctionParameter_ByRegister = setFunctionParameterGenerator;
+    this.setFunctionParameter_ByRegister = () => setFunctionParameterGenerator();
     this.setFunctionParameter_ByValue = value => setFunctionParameterGenerator({
         value:value
     });
@@ -167,10 +167,7 @@ const OP_GEN = new (function(){
     this.modifyRegister_ByVariable = (sign,variableName) => basicRegisterMathGenerator(sign,{name:variableName});
     this.modifyRegister_ByValue = (sign,value) => basicRegisterMathGenerator(sign,{value:value});
 
-
-
-
-    this.return = returnGenerator;
+    this.return = () => returnGenerator();
     this.return_ByValue = value => returnGenerator({value:value});
     this.return_ByVariable = variableName => returnGenerator({variableName:variableName});
 

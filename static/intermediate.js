@@ -5,6 +5,8 @@ const IMPOSSIBLE_TRUTH = "Cannot evaluate the truth of an undefined value";
 const MISSING_SCOPE_CODE = "Scope block operation is missing a code block";
 const ARRAY_EMPTY_ERROR = "This operation is invalid because the enumerable type is empty";
 const ARRAY_BOUNDS_ERROR = "The fabled index out of bounds error";
+const MISSING_INDEX_PARAMETER = "This operation is missing an index parameter";
+const GENERIC_ENUMERABLE_REF_ERROR = "An error occured in an enumerable element's operation. This error is likely internal.";
 
 function reverseScopeSearch(name,scope) {
     let searchBlock = scope;
@@ -238,7 +240,7 @@ function processFunctionCall(statementOrBlock,blockScope) {
                         }
                     );
                 } else {
-                    throw TypeError(`'${functionName}' is not of type '${FUNCTION_TYPE_CODE}'`);
+                    throw TypeError(`'${functionName}' with type '${functionLookup.type}' is not of valid type '${FUNCTION_TYPE_CODE}'`);
                 }
             } else if(scopeResult.found) {
                 throw ReferenceError(`Function by the name '${functionName} was never declared`);
@@ -408,7 +410,7 @@ function processEnumerableChange(statementOrBlock,blockScope) {
                     statementOrBlock.imp.index
                 );
             } else {
-                throw Error();
+                throw SyntaxError(MISSING_INDEX_PARAMETER);
             }
             break;
         case ENM_CHANGE_DEL_IDX:
@@ -420,7 +422,7 @@ function processEnumerableChange(statementOrBlock,blockScope) {
                     statementOrBlock.imp.index
                 );
             } else {
-                throw Error();
+                throw SyntaxError(MISSING_INDEX_PARAMETER);
             }
             break;
     }
@@ -434,13 +436,13 @@ function processGetEnumerableIndex(statementOrBlock,blockScope) {
             statementOrBlock.imp.index
         );
     } else {
-        throw Error();
+        throw SyntaxError(MISSING_INDEX_PARAMETER);
     }
 }
 
 function processGenericEnumerableProperty(statementOrBlock,blockScope,method,...parameters) {
     if(parameters[0] === undefined) {
-        throw Error();
+        throw ReferenceError(GENERIC_ENUMERABLE_REF_ERROR);
     }
     const variableName = statementOrBlock.imp.name;
     const searchResult = reverseScopeSearch(variableName,blockScope);
@@ -449,13 +451,13 @@ function processGenericEnumerableProperty(statementOrBlock,blockScope,method,...
             if(searchResult.value.type === ENUMERABLE_TYPE_CODE) {
                 blockScope.__internal__.valueRegister = searchResult.value.container[method](...parameters);
             } else {
-                throw Error();
+                throw TypeError(`Variable '${variableName}' with type '${searchResult.value.type}' is not of valid type '${ENUMERABLE_TYPE_CODE}'`)
             }
         } else {
-            throw Error();
+            throw ReferenceError(`Variable '${variableName}' is declared but it has no value`);
         }
     } else {
-        throw Error();
+        throw ReferenceError(`Variable '${variableName}' not found in any enclosing scopes`);
     }
 }
 function processVariableForEnumerable(statementOrBlock,blockScope) {
@@ -466,10 +468,10 @@ function processVariableForEnumerable(statementOrBlock,blockScope) {
             if(variableSearch.value !== undefined) {
                 value = variableSearch.value;
             } else {
-                throw Error();
+                throw ReferenceError(`Variable '${variableName}' is declared but it has no value`);
             }
         } else {
-            throw Error();
+            throw ReferenceError(`Variable '${variableName}' not found in any enclosing scopes`);
         }
     } else if(statementOrBlock.imp.value !== undefined) {
         value = statementOrBlock.imp.value;
@@ -477,7 +479,7 @@ function processVariableForEnumerable(statementOrBlock,blockScope) {
         if(blockScope.__internal__.valueRegister !== undefined) {
             value = blockScope.__internal__.valueRegister;
         } else {
-            throw Error();
+            throw ReferenceError("The value register has no value");
         }
     }
     return value;

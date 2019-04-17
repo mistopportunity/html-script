@@ -31,103 +31,24 @@ function runTests(raw=false) {
 }
 
 const accumlationTest = [
-    {
-        op: DECLARE_OP_CODE,
-        imp: {
-            name: "my_function",
-            type: FUNCTION_TYPE_CODE,
-            parameters: ["rdc"],
-            code: [
-                {
-                    op: REGISTER_OP_CODE,
-                    imp: {
-                        name: "rdc"
-                    }
-                },
-                {
-                    op: MATH_CODE_ADD,
-                    imp: {
-                        value: "Hello, world! "
-                    }
-                },
-                {
-                    op: SET_OP_CODE,
-                    imp: {
-                        name: "rdc"
-                    }
-                },
-                {
-                    op: EXECUTE_OP_CODE,
-                    imp: {
-                        name: "output"
-                    }
-                },
-                {
-                    op: RETURN_OP_CODE,
-                    imp: {
-                        name: "rdc"
-                    }
-                }
-            ]
-        }
-    },
-    {
-        op: SET_PARAMETER_OP_CODE,
-        imp: {
-            value: ""
-        }
-    },
-    {
-        op: EXECUTE_OP_CODE,
-        imp: {
-            name: "my_function"
-        }
-    },
-    {
-        op: SET_PARAMETER_OP_CODE
-    },
-    {
-        op: EXECUTE_OP_CODE,
-        imp: {
-            name: "my_function"
-        }
-    },
-    {
-        op: SET_PARAMETER_OP_CODE
-    },
-    {
-        op: EXECUTE_OP_CODE,
-        imp: {
-            name: "my_function"
-        }
-    },
-    {
-        op: SET_PARAMETER_OP_CODE
-    },
-    {
-        op: EXECUTE_OP_CODE,
-        imp: {
-            name: "my_function"
-        }
-    },
-    {
-        op: SET_PARAMETER_OP_CODE
-    },
-    {
-        op: EXECUTE_OP_CODE,
-        imp: {
-            name: "my_function"
-        }
-    },
-    {
-        op: SET_PARAMETER_OP_CODE
-    },
-    {
-        op: EXECUTE_OP_CODE,
-        imp: {
-            name: "my_function"
-        }
-    }
+    OP_GEN.functionBlock("my_function",[
+        OP_GEN.setRegister_ByVariable("rdc"),
+        OP_GEN.modifyRegister_ByValue("add","Hello, world! "),
+        OP_GEN.execute("output"),
+        OP_GEN.return()
+    ],"rdc"),
+
+    OP_GEN.setFunctionParameter_ByValue(""),
+    OP_GEN.execute("my_function"),
+
+    OP_GEN.setFunctionParameter_ByRegister(),
+    OP_GEN.execute("my_function"),
+
+    OP_GEN.setFunctionParameter_ByRegister(),
+    OP_GEN.execute("my_function"),
+
+    OP_GEN.setFunctionParameter_ByRegister(),
+    OP_GEN.execute("my_function")
 ];
 
 const jumpTest = [
