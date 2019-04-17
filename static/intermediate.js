@@ -152,10 +152,14 @@ function processDeclaration(statementOrBlock,blockScope) {
     }
 }
 function processVariableSet(statementOrBlock,blockScope) {
-    const variableName = statementOrBlock.imp.name ? statementOrBlock.imp.name : undefined;
+    let variableName = undefined;
+    const hasImp = statementOrBlock.imp ? true : false;
+    if(hasImp) {
+        variableName = statementOrBlock.imp.name;
+    } 
     if(variableName === undefined) {
         if(statementOrBlock.op === SET_PARAMETER_OP_CODE) {
-            if(statementOrBlock.imp.value !== undefined) {
+            if(hasImp && statementOrBlock.imp.value !== undefined) {
                 blockScope.__internal__.functionRegister.push(
                     statementOrBlock.imp.value
                 );
@@ -384,16 +388,18 @@ function processScopeBlock(statementOrBlock,blockScope) {
 }
 function processEnumerableChange(statementOrBlock,blockScope) {
     switch(statementOrBlock.imp.type) {
-        case ENM_CHANGE_ADD_START:
-            const value = processVariableForEnumerable(statementOrBlock,blockScope);
-            processGenericEnumerableProperty(statementOrBlock,blockScope,value,"unshift");
+        case ENM_CHANGE_ADD_START: {
+                const value = processVariableForEnumerable(statementOrBlock,blockScope);
+                processGenericEnumerableProperty(statementOrBlock,blockScope,value,"unshift");
+            }
             break;
         case ENM_CHANGE_DEL_START:
             processGenericEnumerableProperty(statementOrBlock,blockScope,null,"shift");
             break;
-        case ENM_CHANGE_ADD_END:
-            const value = processVariableForEnumerable(statementOrBlock,blockScope);
-            processGenericEnumerableProperty(statementOrBlock,blockScope,value,"push");
+        case ENM_CHANGE_ADD_END: {
+                const value = processVariableForEnumerable(statementOrBlock,blockScope);
+                processGenericEnumerableProperty(statementOrBlock,blockScope,value,"push");
+            }
             break;
         case ENM_CHANGE_DEL_END:
             processGenericEnumerableProperty(statementOrBlock,blockScope,null,"pop");

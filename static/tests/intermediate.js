@@ -5,7 +5,11 @@ function registerTest(name,code) {
         code:code
     });
 }
-function runTests() {
+function runTests(raw=false) {
+    if(raw) {
+        tests.forEach(test=>executeScript(test.code));
+        return;
+    }
     let passed = 0;
     tests.forEach(test => {
         try {
@@ -128,4 +132,4 @@ const jumpTest = [
 ]
 
 registerTest("Accumulation test",accumlationTest);
-runTests();
+runTests(true);
