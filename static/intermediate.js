@@ -7,6 +7,32 @@ const ARRAY_EMPTY_ERROR = "This operation is invalid because the enumerable type
 const ARRAY_BOUNDS_ERROR = "The fabled index out of bounds error";
 const MISSING_INDEX_PARAMETER = "This operation is missing an index parameter";
 const GENERIC_ENUMERABLE_REF_ERROR = "An error occured in an enumerable element's operation. This error is likely internal.";
+const EMPTY_REGISTER_ERROR = "The register has no value";
+
+function variableHasNoValue(variableName) {
+    return `Variable '${variableName}' is delcared but it has no value`;
+}
+function variableDoesNotExist(variableName) {
+    return `Variable '${variableName}' not found in any enclosing scopes`;
+}
+function typeMismatch(variableName,variableType,targetType) {
+    return `'${variableName}' with type '${variableType}' is not of valid type '${targetType}'`;
+}
+function unknownComparisonType(type) {
+    return `Comparison type '${type}' is not recognized`;
+}
+function invalidDeclarationType(type) {
+    retunr `'${type}' is not a valid declaration type code`;
+}
+function invalidArithmetic(operationName) {
+    return `Invalid data for arithmetic operation '${operationName}'`;
+}
+function unknownObjectType(value,type) {
+    return `Unknown type '${type}' for '${value}'`;
+}
+function invalidJumpType(type) {
+    return `Jump type '${type}' is invalid for jump operations`;
+}
 
 function reverseScopeSearch(name,scope) {
     let searchBlock = scope;
@@ -143,7 +169,7 @@ function processDeclaration(statementOrBlock,blockScope) {
             blockScope[variableName] = statementOrBlock.imp;
             break;
         default:
-            throw SyntaxError(`'${statementOrBlock.imp.type}' is not a valid declaration type code`);
+            throw SyntaxError(invalidDeclarationType(statementOrBlock.imp.type));
     }
 }
 function processVariableSet(statementOrBlock,blockScope) {
@@ -180,7 +206,7 @@ function processVariableSet(statementOrBlock,blockScope) {
                     scopeResult.value
                 );
             } else {
-                throw ReferenceError(`Variable '${variableName}' is declared but it has no value`);
+                throw ReferenceError(variableHasNoValue(variableName));
             }
         } else if(statementOrBlock.imp.src !== undefined) {
             const sourceScopeResult = reverseScopeSearch(
@@ -189,13 +215,13 @@ function processVariableSet(statementOrBlock,blockScope) {
             if(sourceScopeResult.value !== undefined) {
                 scopeResult.scope[statementOrBlock.imp.src] = sourceScopeResult.value;
             } else {
-                throw ReferenceError(`Variable '${statementOrBlock.imp.src}' is declared but it has no value`);
+                throw ReferenceError(variableHasNoValue(statementOrBlock.imp.src));
             }
         } else {
             scopeResult.scope[variableName] = blockScope.__internal__.valueRegister;
         }
     } else {
-        throw ReferenceError(`Variable '${variableName}' not declared in any enclosing scopes`);
+        throw ReferenceError(variableDoesNotExist(variableName));
     }
 }
 
@@ -212,9 +238,9 @@ function processRegisterSet(statementOrBlock,blockScope) {
     if(variableResult !== undefined) {
         blockScope.__internal__.valueRegister = scopeResult.scope[variableName];
     } else if(scopeResult.found) {
-        throw ReferenceError(`Variable '${variableName}' has no value`);
+        throw ReferenceError(variableHasNoValue(variableName));
     }  else {
-        throw ReferenceError(`Variable '${variableName}' not found in enclosing scopes`);
+        throw ReferenceError(variableDoesNotExist(variableName));
     }
 }
 
@@ -240,12 +266,12 @@ function processFunctionCall(statementOrBlock,blockScope) {
                         }
                     );
                 } else {
-                    throw TypeError(`'${functionName}' with type '${functionLookup.type}' is not of valid type '${FUNCTION_TYPE_CODE}'`);
+                    throw TypeError(typeMismatch(functionName,functionLookup.type,FUNCTION_TYPE_CODE));
                 }
             } else if(scopeResult.found) {
-                throw ReferenceError(`Function by the name '${functionName} was never declared`);
+                throw ReferenceError(variableHasNoValue(functionName));
             } else {
-                throw ReferenceError(`Function by the name '${functionName}' was not found`);
+                throw ReferenceError(variableDoesNotExist(functionName));
             }
             break;
     }
@@ -279,15 +305,16 @@ function processBasicArithmetic(statementOrBlock,blockScope) {
             const righthandData = scopeResult.scope[variableName];
             modifyValueRegister(statementOrBlock.op,blockScope,righthandData);
         } else if(scopeResult.found) {
-            throw ReferenceError(`Variable '${variableName}' has no value`);
+            throw ReferenceError(variableHasNoValue(variableName));
         } else {
-            throw ReferenceError(`Variable '${variableName}' not found in enclosing scopes`);
+            throw ReferenceError(variableDoesNotExist(variableName));
         }
     } else if(statementOrBlock.imp.value !== undefined) {
         const righthandData = statementOrBlock.imp.value;
         modifyValueRegister(statementOrBlock.op,blockScope,righthandData);
     } else {
-        throw SyntaxError(`Invalid data for arithmetic operation '${statementOrBlock.op}'`);
+        console.log(statementOrBlock);
+        throw SyntaxError(invalidArithmetic(statementOrBlock.op));
     }
 }
 function truthEvaluation(value) {
@@ -295,7 +322,7 @@ function truthEvaluation(value) {
         throw ReferenceError(IMPOSSIBLE_TRUTH);
     }
     const type = typeof value;
-    switch(typeof value) {
+    switch(type) {
         case "string":
             return true;
         case "number":
@@ -305,7 +332,7 @@ function truthEvaluation(value) {
         case "object":
             return value !== null;
         default:
-            console.warn(`Unknown type (${type}) for '${value}'`);
+            console.warn(unknownObjectType(value,type));
             return false;
     }
 }
@@ -317,7 +344,7 @@ function processJumpBlock(block,index) {
             case DYNAM_JUMP_TYPE:
                 return index - 1 + block.index;
             default:
-                throw SyntaxError(`Jump type '${block.type}' is invalid for jump blocks`);
+                throw SyntaxError(invalidJumpType(block.type));
         }
     } else {
         throw SyntaxError(MISSING_JUMP_PARAMETERS);
@@ -332,10 +359,10 @@ function processComparisonValue(value,blockScope) {
             if(searchResult.value !== undefined) {
                 return searchResult.value;
             } else {
-                throw ReferenceError(`Variable '${value}' has no value`);
+                throw ReferenceError(variableHasNoValue(value));
             }
         } else {
-            throw ReferenceError(`Variable '${value}' not found in enclosing scopes`);
+            throw ReferenceError(variableDoesNotExist(value));
         }
     }
 }
@@ -358,7 +385,7 @@ function comparisonEvaluation(type,leftValue,rightValue) {
         case CMP_AND:
             return truthEvaluation(leftValue) & truthEvaluation(rightValue);
         default:
-            throw SyntaxError(`Comparison type '${statementOrBlock.imp.type}' is not recognized`);
+            throw SyntaxError(unknownComparisonType(statementOrBlock.imp.type));
     }
 }
 function processVariableDeletion(statementOrBlock,blockScope) {
@@ -366,7 +393,7 @@ function processVariableDeletion(statementOrBlock,blockScope) {
     if(scopeResult.found) {
         delete scopeResult.scope[statementOrBlock.imp.name];
     } else {
-        throw ReferenceError(`Variable or function '${statementOrBlock.imp.name}' not found in enclosing scopes`);
+        throw ReferenceError(variableDoesNotExist(statementOrBlock.imp.name));
     }
 }
 function processComparison(statementOrBlock,blockScope) {
@@ -451,13 +478,13 @@ function processGenericEnumerableProperty(statementOrBlock,blockScope,method,...
             if(searchResult.value.type === ENUMERABLE_TYPE_CODE) {
                 blockScope.__internal__.valueRegister = searchResult.value.container[method](...parameters);
             } else {
-                throw TypeError(`Variable '${variableName}' with type '${searchResult.value.type}' is not of valid type '${ENUMERABLE_TYPE_CODE}'`)
+                throw TypeError(typeMismatch(variableName,searchResult.value.type,ENUMERABLE_TYPE_CODE));
             }
         } else {
-            throw ReferenceError(`Variable '${variableName}' is declared but it has no value`);
+            throw ReferenceError(variableHasNoValue(variableName));
         }
     } else {
-        throw ReferenceError(`Variable '${variableName}' not found in any enclosing scopes`);
+        throw ReferenceError(variableDoesNotExist(variableName));
     }
 }
 function processVariableForEnumerable(statementOrBlock,blockScope) {
@@ -468,10 +495,10 @@ function processVariableForEnumerable(statementOrBlock,blockScope) {
             if(variableSearch.value !== undefined) {
                 value = variableSearch.value;
             } else {
-                throw ReferenceError(`Variable '${variableName}' is declared but it has no value`);
+                throw ReferenceError(variableHasNoValue(variableName));
             }
         } else {
-            throw ReferenceError(`Variable '${variableName}' not found in any enclosing scopes`);
+            throw ReferenceError(variableDoesNotExist(variableName));
         }
     } else if(statementOrBlock.imp.value !== undefined) {
         value = statementOrBlock.imp.value;
@@ -479,7 +506,7 @@ function processVariableForEnumerable(statementOrBlock,blockScope) {
         if(blockScope.__internal__.valueRegister !== undefined) {
             value = blockScope.__internal__.valueRegister;
         } else {
-            throw ReferenceError("The value register has no value");
+            throw ReferenceError(EMPTY_REGISTER_ERROR);
         }
     }
     return value;

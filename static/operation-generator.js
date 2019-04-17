@@ -22,6 +22,9 @@ const OP_GEN = new (function(){
     }
 //================================================================================
 //================================================================================
+    function unrecognizedMathSign(sign) {
+        return `Unrecognized math operation sign '${sign}'`;
+    }
     function namedImpOperation(operationName,variableName,imp) {
         const operation = operationOnly(operationName);
         if(imp) {
@@ -158,7 +161,7 @@ const OP_GEN = new (function(){
                 operationCode = MATH_CODE_MULTIPLY;
                 break;
             default:
-                throw SyntaxError(`Unrecognized math operation sign '${sign}'`);
+                throw SyntaxError(unrecognizedMathSign(sign));
         }
         const operation = basicOperation(operationCode,imp);
         return operation;
