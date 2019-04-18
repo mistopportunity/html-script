@@ -391,14 +391,14 @@ function OwO_Compiler() {
                                 });
                             } else if(line.length === 5) {
                                 if(line[3] === FROM) {
-                                    const sourceName = validateVariableName(line[4],lineNumber);
+                                    const listValueReport = valueReport(line[4],lineNumber);
                                     const tokenType = line[2] === LIST ?
                                         tokenTypes.listDeclaration_fromOther:
                                         tokenTypes.groupDeclaration_fromOther;
 
                                     return getTokenObject(tokenType,{
                                         name: variableName,
-                                        src: sourceName
+                                        src: listValueReport
                                     });
                                 } else {
                                     throw SyntaxError(invalidDeclaration(lineNumber));

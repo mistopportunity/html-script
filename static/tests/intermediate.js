@@ -76,6 +76,7 @@ const jumpTest = [
 registerTest("OwO com",() => {
     const compiler = new OwO_Compiler();
     compiler.compile([
+        'decware persons list from allObjects#"people"',
         "decware animal list: objects#0, objects#1, objects#3, objects2D#0#0",
         "decware camel wif animals#2",
         "decware camel wif animals#index",
