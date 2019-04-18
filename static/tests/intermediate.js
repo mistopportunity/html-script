@@ -76,6 +76,12 @@ const jumpTest = [
 registerTest("OwO com",() => {
     const compiler = new OwO_Compiler();
     compiler.compile([
+        "decware animal list: objects#0, objects#1, objects#3, objects2D#0#0",
+        "decware camel wif animals#2",
+        "decware camel wif animals#index",
+        "decware firstAnimal wif animals2D#index#0",
+        "decware firstAnimal wif animals2D#0#index#index#0#49#index",
+        "decware firstAnimal wif animals2D#0#index",
         "decware camel",
         "decware dog wif 278",
         'decware cat wif "meow"',

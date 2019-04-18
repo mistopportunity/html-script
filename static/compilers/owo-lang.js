@@ -1,8 +1,9 @@
 function OwO_Compiler() {
     
+    const indexingCharacter = "#";
     const tokenSeperator = " ";
     const stringQuoteCharacter = '"';
-    const legalVariableLetters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_";
+    const legalVariableLetters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_";
     const legalNumbers = "1234567890";
     const enumerableSeperator = ":";
     const enumerableItemSeperator = ",";
@@ -131,6 +132,8 @@ function OwO_Compiler() {
                 break;
             case 2://contains invalid characters
                 break;
+            case 3://repeated indexing character
+                break;
         }
     };
 
@@ -203,16 +206,33 @@ function OwO_Compiler() {
     }
 
     function validateVariableName(name,lineNumber) {
-        if(keyWordsLookup[name]) {
+        for(let i = 1;i<name.length;i++) {
+            const lastCharacter = name[i-1];
+            const currentCharacter = name[i];
+            if(lastCharacter === indexingCharacter && currentCharacter === indexingCharacter) {
+                throw SyntaxError(invalidVariableName(lineNumber,3));
+            }
+        }
+        const lookupName = name.split(indexingCharacter);
+        const lookupNameStart = lookupName[0];
+        if(keyWordsLookup[lookupNameStart]) {
             throw SyntaxError(invalidVariableName(lineNumber,0));
         }
-        if(legalNumbersLookup[name[0]]) {
+        if(legalNumbersLookup[lookupNameStart[0]]) {
             throw SyntaxError(invalidVariableName(lineNumber,1));
         }
-        for(const character of name) {
+        for(const character of lookupNameStart) {
             if(!legalVariableLettersLookup[character]) {
                 throw SyntaxError(invalidVariableName(lineNumber,2));
             }
+        }
+        if(lookupName.length > 1) {
+            const errorWithReturnValues = Error();
+            errorWithReturnValues.valueReportData = {
+                rootName: lookupNameStart,
+                remainingIndexers: lookupName.slice(1)
+            };
+            throw errorWithReturnValues;
         }
         return name;
     }
@@ -274,6 +294,34 @@ function OwO_Compiler() {
                 value: name
             };
         } catch(error) {
+            if(error.valueReportData) {
+                const rootListName = error.valueReportData.rootName;
+                const remainingIndexers = error.valueReportData.remainingIndexers;
+                const firstValueReport = valueReport(rootListName);
+
+                let currentIndex = {};
+                const rootElement = {
+                    type: firstValueReport.type,
+                    value: firstValueReport,
+                    index: currentIndex
+                }
+                let lastIndex = rootElement;
+
+                do {
+                    const indexer = remainingIndexers.shift();
+                    const report = valueReport(indexer,lineNumber);
+
+                    currentIndex.type = report.type;
+                    currentIndex.value = report.value;
+                    currentIndex.index = {index:null};
+
+                    lastIndex = currentIndex;
+                    currentIndex = currentIndex.index;
+                } while(remainingIndexers.length);
+                delete lastIndex.index;
+
+                return rootElement;
+            }
             try {
                 const value = validateValue(text,lineNumber);
                 return {
@@ -377,20 +425,20 @@ function OwO_Compiler() {
                                 throw SyntaxError(invalidDeclaration(lineNumber));
                             }
                             const sourceValue = valueReport(line[3],lineNumber);
-                            switch(sourceValue.type) {
-                                case valueReportTypes.byReference:
-                                    return getTokenObject(tokenTypes.variableDeclaration_byVariable,{
-                                        name: variableName,
-                                        src: sourceValue.value
-                                    });
-                                case valueReportTypes.byValue:
-                                    return getTokenObject(tokenTypes.variableDeclaration_byValue,{
-                                        name: variableName,
-                                        value: sourceValue.value
-                                    });
-                                default:
-                                    throw Error(INVALID_VALUE_REPORT_TYPE);
+
+                            const variableTokenType = sourceValue.type === valueReportTypes.byReference ?
+                                tokenTypes.variableDeclaration_byVariable:
+                                tokenTypes.variableDeclaration_byValue;
+                            
+                            const tokenObject = getTokenObject(variableTokenType,{
+                                name: variableName,
+                                src: sourceValue.value
+                            });
+
+                            if(sourceValue.index) {
+                                tokenObject.src.index = sourceValue.index;
                             }
+                            return tokenObject;
                         default:
                             if(line.length === 2) {
                                 return getTokenObject(tokenTypes.variableDeclaration,{
@@ -401,7 +449,6 @@ function OwO_Compiler() {
                             }
                     }
                 }
-                break;
             case WRITE:
                 break;
             case READ:
