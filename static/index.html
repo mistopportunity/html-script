@@ -9,10 +9,24 @@
         iframe {
             display: none;
         }
+        p#awaiting-input {
+            display: block !important;
+            padding: 15px;
+            margin: 0;
+            background-color: rgb(0, 0, 0);
+            text-align: center;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+        p#awaiting-input.hidden {
+            display: none !important;
+        }
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.css">
 </head>
 <body>
+    <p id="awaiting-input"></p>
     <h1>output</h1>
     <div id="output"></div>
 

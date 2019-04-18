@@ -108,4 +108,8 @@ registerTest("OwO com",() => {
 });
 registerTest("Accumulation test",accumlationTest);
 registerTest("Jump test",jumpTest);
+registerTest("Input test",[
+    OP_GEN.input(),
+    OP_GEN.output()
+]);
 runTests(raw=false);

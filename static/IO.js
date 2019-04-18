@@ -1,4 +1,10 @@
 const outputElement = document.getElementById("output");
+const awaitingInputElement = document.getElementById("awaiting-input");
+const awaitingInputText = "Awaiting input via 'sendInput...'";
+const awaitingInputLogStyle = "background-color: black; color: white;padding: 4px";
+awaitingInputElement.textContent = awaitingInputText;
+awaitingInputElement.classList.add("hidden");
+
 function output(text,color) {
     const paragraph = document.createElement("p");
     paragraph.appendChild(document.createTextNode(text));
@@ -40,6 +46,7 @@ function sendInput(value) {
             return;
     }
     if(inputPromiseResolver) {
+        awaitingInputElement.classList.add("hidden");
         inputPromiseResolver(inputStack.shift());
     }
 }
@@ -48,6 +55,8 @@ function getInput() {
         return inputStack.shift();
     }
     const inputPromise = new Promise(resolve => {
+        awaitingInputElement.classList.remove("hidden");
+        console.log(`%c${awaitingInputText}`,awaitingInputLogStyle);
         inputPromiseResolver = resolve;
     });
     return inputPromise;
