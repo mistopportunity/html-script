@@ -280,4 +280,10 @@ const OP_GEN = new (function(){
             name: variableName
         });
     }
+    this.input = function inputGenerator() {
+        return this.execute(INPUT_FUNCTION_NAME);
+    }
+    this.output = function outputGenerator() {
+        return this.execute(OUTPUT_FUNCTION_NAME);
+    }
 })();

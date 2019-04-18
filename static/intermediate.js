@@ -243,12 +243,15 @@ function processRegisterSet(statementOrBlock,blockScope) {
         throw ReferenceError(variableDoesNotExist(variableName));
     }
 }
-
-function processFunctionCall(statementOrBlock,blockScope) {
+async function processFunctionCall(statementOrBlock,blockScope) {
     const functionName = statementOrBlock.imp.name;
     switch(functionName) {
         case OUTPUT_FUNCTION_NAME:
             output(blockScope.__internal__.valueRegister);
+            break;
+        case INPUT_FUNCTION_NAME:
+            const inputResult = await getInput();
+            blockScope.__internal__.valueRegister = inputResult;
             break;
         default:
             const scopeResult = reverseScopeSearch(functionName,blockScope);
@@ -522,7 +525,7 @@ function processGetEnumerableValueCount(statementOrBlock,blockScope) {
     const value = processVariableForEnumerable(statementOrBlock,blockScope);
     processGenericEnumerableProperty(statementOrBlock,blockScope,"countOf",value);
 }
-function executeBlock(data,parentScope,parameterizer) {
+async function executeBlock(data,parentScope,parameterizer) {
     const scopeLevel = parentScope ? parentScope.__internal__.level + 1 : 0;
     const blockScope = {
         __internal__: {
@@ -583,7 +586,7 @@ function executeBlock(data,parentScope,parameterizer) {
                 processRegisterSet(statementOrBlock,blockScope);
                 break;
             case EXECUTE_OP_CODE:
-                processFunctionCall(statementOrBlock,blockScope);
+                await processFunctionCall(statementOrBlock,blockScope);
                 break;
             case MATH_CODE_ADD:
             case MATH_CODE_SUBTRACT:
@@ -618,6 +621,6 @@ function executeBlock(data,parentScope,parameterizer) {
         }
     };
 }
-function executeScript(scriptData) {
-    executeBlock(scriptData,null,null);
+async function executeScript(scriptData) {
+    await executeBlock(scriptData,null,null);
 }

@@ -17,7 +17,9 @@ const MATH_CODE_SUBTRACT = "sub";
 const MATH_CODE_MULTIPLY = "mtp";
 const MATH_CODE_DIVIDE = "div";
 
-const OUTPUT_FUNCTION_NAME = "output";
+const INPUT_FUNCTION_NAME = "~in";
+const OUTPUT_FUNCTION_NAME = "~out";
+
 const JUMP_OP_CODE = "jmp";
 const CON_JUMP_OP_CODE = "cjmp";
 const BREAK_OP_CODE = "brk";

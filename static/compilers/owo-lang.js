@@ -1,5 +1,7 @@
-function OwO_Compiler() {
-    
+function OwO_Compiler(advancedLogging=false) {
+    if(typeof advancedLogging !== typeof true) {
+        throw TypeError(`Parameter 'advancedLogging' must be of type '${typeof true}', not '${typeof advancedLogging}'`);
+    }
     const indexingCharacter = "#";
     const tokenSeperator = " ";
     const stringQuoteCharacter = '"';
@@ -8,10 +10,10 @@ function OwO_Compiler() {
     const enumerableSeperator = ":";
     const enumerableItemSeperator = ",";
 
-    const DECLARE = "decware";
-    const WRITE = "wite";
-    const READ = "wead";
-    const RETURN = "weturn";
+    const DECLARE = "dec";
+    const WRITE = "write";
+    const READ = "read";
+    const RETURN = "return";
     const WHILE = "while";
     const OPEN_BRACE = "OwO";
     const END_BRACE = "UwO";
@@ -21,16 +23,13 @@ function OwO_Compiler() {
     const FUNCTION = "function";
 
     const LIST = "list";
-    const GROUP = "gwoup";
+    const GROUP = "group";
     const LIST_DEFINE = LIST + enumerableSeperator;
     const GROUP_DEFINE = GROUP + enumerableSeperator;
 
-    const INDEXER = "number";
     const SET = "set";
-    const TO = "to";
     const DO = "do";
-    const OF = "of";
-    const LENGTH = "wength";
+    const LENGTH = "size";
 
     const EQUAL = "=";
     const NOT_EQUAL = "!=";
@@ -39,24 +38,13 @@ function OwO_Compiler() {
     const GREATER_OR_EQUAL = ">=";
     const LESS_OR_EQUAL = "<=";
 
-    const WITH = "wif";
-
     const TRUE = "true";
     const FALSE = "false";
 
     const ADD = "add";
     const SUBTRACT = "subtract";
-    const FROM = "from";
+    const FROM = "->";
 
-    const legalNumbersLookup = {};
-    [...legalNumbers].forEach(number => {
-        legalNumbersLookup[number] = true;
-    })
-
-    const legalVariableLettersLookup = {};
-    [...legalVariableLetters].forEach(letter => {
-        legalVariableLettersLookup[letter] = true
-    });
     const keyWords = [
         DECLARE,
         WRITE,
@@ -65,31 +53,43 @@ function OwO_Compiler() {
         WHILE,
         OPEN_BRACE,
         END_BRACE,
+        IF,
+        ELSE,
+    
+        FUNCTION ,
+    
         LIST,
         GROUP,
         LIST_DEFINE,
         GROUP_DEFINE,
-        INDEXER,
+    
         SET,
-        TO,
         DO,
+        LENGTH,
+    
         EQUAL,
         NOT_EQUAL,
         GREATER,
         LESSER,
         GREATER_OR_EQUAL,
         LESS_OR_EQUAL,
-        IF,
-        ELSE,
-        WITH,
-        OF,
-        LENGTH,
+    
         TRUE,
         FALSE,
+    
         ADD,
         SUBTRACT,
         FROM
     ];
+    
+    const legalNumbersLookup = {};
+    [...legalNumbers].forEach(number => {
+        legalNumbersLookup[number] = true;
+    });
+    const legalVariableLettersLookup = {};
+    [...legalVariableLetters].forEach(letter => {
+        legalVariableLettersLookup[letter] = true
+    });
     const keyWordsLookup = {};
     keyWords.forEach(keyWord => {
         if(keyWordsLookup[keyWord]) {
@@ -99,43 +99,55 @@ function OwO_Compiler() {
     });
 
     function formatLineNumber(lineNumber) {
-        return `@ line #${lineNumber+1}`;
+        return `${lineNumber+1}`;
     }
 
     function duplicateKeyWord(keyWord) {
         //This is an internal error for the compiler
         return `Key word '${keyWord}' is defined more than once!`;
     }
-    function requiredBlockStart(lineNumber) {
-        return `Expected '${OPEN_BRACE}' ${formatLineNumber(lineNumber)}`;
+    function requiredBlockStart() {
+        return `Expected '${OPEN_BRACE}'`;
     }
-    function requiredBlockEnd(lineNumber) {
-        return `Expected '${END_BRACE}' but reached end of parent block ${formatLineNumber(lineNumber)}`;
+    function requiredBlockEnd() {
+        return `Expected '${END_BRACE}' but reached end of parent block`;
     }
 
-    const INVALID_VALUE_REPORT_TYPE = "Invalid value report type";
-
-    function invalidDeclaration(lineNumber){};
-    function expectedWithInFuncDef(lineNumber){};
-    function unexpectedToken(lineNumber){};
-    function unexpectedValue(lineNumber){};
-    function expectedStringQuote(lineNumber){};
-    function invalidCharacterInNumber(lineNumber){};
-    function invalidNumber(lineNumber){};
-    function invalidVariableName(lineNumber,type){
+    function invalidDeclaration(){
+        return "Invalid declaration";
+    }
+    function expectedFunctionParameters() {
+        return "Expected function parameters but there are none";
+    }
+    function unexpectedToken(){
+        return "Unexpected token";
+    }
+    function unexpectedValue(){
+        return "Unexpected value";
+    }
+    function expectedStringQuote(){
+        return "Expected a string end quote";
+    }
+    function invalidCharacterInNumber(){
+        return "Number contains a non-number character";
+    }
+    function invalidNumber(){
+        return "Invalid static number";
+    }
+    function invalidVariableName(type){
         switch(type) {
             default:
-                break;
-            case 0://uses key word
-                break;
-            case 1://starts with a number
-                break;
-            case 2://contains invalid characters
-                break;
-            case 3://repeated indexing character
-                break;
+                return "Invalid variable name";
+            case 0:
+                return "Invalid variable name uses a reserved key word";
+            case 1:
+                return "Invalid variable name starts with a number";
+            case 2:
+                return "Invalid variable name uses non-allowed characters";
+            case 3:
+                return "Use of indexing is malformed";
         }
-    };
+    }
 
     function createWhileLoop() {
 
@@ -202,28 +214,28 @@ function OwO_Compiler() {
     }
 
     function compileTokens(tokens) {
-        console.log(tokens);
+
     }
 
-    function validateVariableName(name,lineNumber) {
+    function validateVariableName(name) {
         for(let i = 1;i<name.length;i++) {
             const lastCharacter = name[i-1];
             const currentCharacter = name[i];
             if(lastCharacter === indexingCharacter && currentCharacter === indexingCharacter) {
-                throw SyntaxError(invalidVariableName(lineNumber,3));
+                throw SyntaxError(invalidVariableName(3));
             }
         }
         const lookupName = name.split(indexingCharacter);
         const lookupNameStart = lookupName[0];
         if(keyWordsLookup[lookupNameStart]) {
-            throw SyntaxError(invalidVariableName(lineNumber,0));
+            throw SyntaxError(invalidVariableName(0));
         }
         if(legalNumbersLookup[lookupNameStart[0]]) {
-            throw SyntaxError(invalidVariableName(lineNumber,1));
+            throw SyntaxError(invalidVariableName(1));
         }
         for(const character of lookupNameStart) {
             if(!legalVariableLettersLookup[character]) {
-                throw SyntaxError(invalidVariableName(lineNumber,2));
+                throw SyntaxError(invalidVariableName(2));
             }
         }
         if(lookupName.length > 1) {
@@ -237,18 +249,18 @@ function OwO_Compiler() {
         return name;
     }
 
-    function validateListItems(text,lineNumber) {
+    function validateListItems(text) {
         const valuesString = text.join("");
         const items = valuesString.split(enumerableItemSeperator);
         for(let i = 0;i<items.length;i++) {
             const item = items[i];
-            const report = valueReport(item,lineNumber);
+            const report = valueReport(item);
             items[i] = report;
         }
         return items;
     }
 
-    function validateValue(text,lineNumber) {
+    function validateValue(text) {
         switch(text) {
             case TRUE:
             case FALSE:
@@ -266,7 +278,7 @@ function OwO_Compiler() {
                         string += character;
                     }
                     if(!didBreak) {
-                        throw SyntaxError(expectedStringQuote(lineNumber));
+                        throw SyntaxError(expectedStringQuote());
                     }
                     return getValue(string,"string");
                 } else {
@@ -274,21 +286,21 @@ function OwO_Compiler() {
                     for(let i = 0;i<text.length;i++) {
                         const character = text[i];
                         if(!legalNumbersLookup[character]) {
-                            throw SyntaxError(invalidCharacterInNumber(lineNumber));
+                            throw SyntaxError(invalidCharacterInNumber());
                         }
                         number += character;
                     }
                     const parsedNumber = Number(number);
                     if(isNaN(parsedNumber)) {
-                        throw SyntaxError(invalidNumber(lineNumber));
+                        throw SyntaxError(invalidNumber());
                     }
                     return getValue(parsedNumber,"number");
                 }
         }
     }
-    function valueReport(text,lineNumber) {
+    function valueReport(text) {
         try {
-            const name = validateVariableName(text,lineNumber);
+            const name = validateVariableName(text);
             return {
                 type: valueReportTypes.byReference,
                 value: name
@@ -309,7 +321,7 @@ function OwO_Compiler() {
 
                 do {
                     const indexer = remainingIndexers.shift();
-                    const report = valueReport(indexer,lineNumber);
+                    const report = valueReport(indexer);
 
                     currentIndex.type = report.type;
                     currentIndex.value = report.value;
@@ -323,13 +335,13 @@ function OwO_Compiler() {
                 return rootElement;
             }
             try {
-                const value = validateValue(text,lineNumber);
+                const value = validateValue(text);
                 return {
                     type: valueReportTypes.byValue,
                     value: value
                 };
             } catch {
-                throw SyntaxError(unexpectedValue(lineNumber));
+                throw SyntaxError(unexpectedValue());
             }
         }
     }
@@ -339,11 +351,17 @@ function OwO_Compiler() {
         return values;
     }
 
-    function getLineSchema(line,lineNumber) {
+    function insertPotentialSpaces(line) {
+        //TODO
+        return line;
+    }
+
+    function getLineSchema(line) {
         line = line.trim();
         if(!line) {
             return null;
         }
+        line = insertPotentialSpaces(line);
         line = line.split(tokenSeperator);
         if(!line.length) {
             return null;
@@ -352,33 +370,38 @@ function OwO_Compiler() {
             case DECLARE:
                 if(line[1] === FUNCTION) {
                     if(line.length < 2) {
-                        throw SyntaxError(invalidDeclaration(lineNumber));
+                        throw SyntaxError(invalidDeclaration());
                     }
-                    const functionName = validateVariableName(line[2],lineNumber);
-                    switch(line.length) {
-                        case 3:
-                            return getTokenObject(tokenTypes.functionDeclaration,{
-                                name: functionName
-                            });
-                        default:
-                            if(line[3] === WITH) {
-                                if(line.length < 4) {
-                                    throw SyntaxError(invalidDeclaration(lineNumber));
+                    if(line[2].endsWith(enumerableSeperator)) {
+                        const functionName = validateVariableName(line[2].substring(0,line[2].length-1));
+                        if(line.length > 3) {
+                            const listItems = validateListItems(line.slice(3));
+                            listItems.forEach(listItem => {
+                                if(listItem.type === valueTypes.byValue) {
+                                    throw SyntaxError(invalidDeclaration());
                                 }
-                                const listItems = validateListItems(line.slice(4),lineNumber);
-                                return getTokenObject(tokenTypes.functionDeclaration_WithParameters,{
-                                    name: functionName,
-                                    values: listItems
-                                });
-                            } else {
-                                throw SyntaxError(expectedWithInFuncDef(lineNumber));
-                            }
+                            });
+                            return getTokenObject(tokenTypes.functionDeclaration_WithParameters,{
+                                name: functionName,
+                                values: listItems
+                            });
+                        } else {
+                            throw SyntaxError(expectedFunctionParameters());
+                        }
+                    } else {
+                        const functionName = validateVariableName(line[2]);
+                        if(line.length !== 3) {
+                            throw SyntaxError(invalidDeclaration());
+                        }
+                        return getTokenObject(tokenTypes.functionDeclaration,{
+                            name: functionName
+                        });
                     }
                 } else {
                     if(line.length < 2) {
-                        throw SyntaxError(invalidDeclaration(lineNumber));
+                        throw SyntaxError(invalidDeclaration());
                     }
-                    const variableName = validateVariableName(line[1],lineNumber);
+                    const variableName = validateVariableName(line[1]);
                     switch(line[2]) {
                         case LIST:
                         case GROUP:
@@ -391,7 +414,7 @@ function OwO_Compiler() {
                                 });
                             } else if(line.length === 5) {
                                 if(line[3] === FROM) {
-                                    const listValueReport = valueReport(line[4],lineNumber);
+                                    const listValueReport = valueReport(line[4]);
                                     const tokenType = line[2] === LIST ?
                                         tokenTypes.listDeclaration_fromOther:
                                         tokenTypes.groupDeclaration_fromOther;
@@ -401,17 +424,17 @@ function OwO_Compiler() {
                                         src: listValueReport
                                     });
                                 } else {
-                                    throw SyntaxError(invalidDeclaration(lineNumber));
+                                    throw SyntaxError(invalidDeclaration());
                                 }
                             } else {
-                                throw SyntaxError(invalidDeclaration(lineNumber));
+                                throw SyntaxError(invalidDeclaration());
                             }
                         case LIST_DEFINE:
                         case GROUP_DEFINE:
                             if(line.length <= 3) {
-                                throw SyntaxError(invalidDeclaration(lineNumber));
+                                throw SyntaxError(invalidDeclaration());
                             }
-                            const listItems = validateListItems(line.slice(3),lineNumber);
+                            const listItems = validateListItems(line.slice(3));
                             const tokenType = line[2] === LIST_DEFINE ?
                                 tokenTypes.listDeclaration_fromValues:
                                 tokenTypes.groupDeclaration_fromValues;
@@ -420,11 +443,11 @@ function OwO_Compiler() {
                                 name: variableName,
                                 values: listItems
                             });
-                        case WITH:
+                        case FROM:
                             if(line.length !== 4) {
-                                throw SyntaxError(invalidDeclaration(lineNumber));
+                                throw SyntaxError(invalidDeclaration());
                             }
-                            const sourceValue = valueReport(line[3],lineNumber);
+                            const sourceValue = valueReport(line[3]);
 
                             const variableTokenType = sourceValue.type === valueReportTypes.byReference ?
                                 tokenTypes.variableDeclaration_byVariable:
@@ -445,31 +468,11 @@ function OwO_Compiler() {
                                     name: variableName
                                 });
                             } else {
-                                throw SyntaxError(unexpectedToken(lineNumber));
+                                throw SyntaxError(unexpectedToken());
                             }
                     }
                 }
-            case WRITE:
-                break;
-            case READ:
-                break;
             case SET:
-                break;
-            case RETURN:
-                break;
-            case WHILE:
-                break;
-            case OPEN_BRACE:
-                break;
-            case END_BRACE:
-                break;
-            case IF:
-                break;
-            case ELSE:
-                break;
-            case ADD:
-                break;
-            case SUBTRACT:
                 break;
         }
 
@@ -480,12 +483,19 @@ function OwO_Compiler() {
         let lineNumber = 0;
         while(lineNumber < lines.length) {
             const line = lines[lineNumber];
-            const schema = getLineSchema(line);
+            const metadata = {
+                lineNumber: lineNumber,
+                originalLine: line
+            };
+            let schema;
+            try {
+                schema = getLineSchema(line);
+            } catch(error) {
+                error.metadata = metadata;
+                throw error;
+            }
             if(schema !== null) {
-                schema.metadata = {
-                    lineNumber: lineNumber,
-                    originalLine: line
-                }
+                schema.metadata = metadata;
                 preprocessed.push(schema);
             }
             lineNumber++;
@@ -494,8 +504,29 @@ function OwO_Compiler() {
     }
 
     this.compile = function(lines) {
-        const tokens = tokenize(lines);
-        const assembly = compileTokens(tokens);
+        let tokens;
+        try {
+            tokens = tokenize(lines);
+        } catch(error) {
+            if(advancedLogging===true) {
+                console.error(error,error.metadata);
+            } else {
+                const formattedError = `${error.name}: ${error.message}\n`;
+                console.error(formattedError,error.metadata);
+            }
+            console.warn("Compiler failed during the tokenization process");
+            return null;
+        }
+        if(advancedLogging) {
+            console.log("Compiled tokens:",tokens);
+        }
+        let assembly;
+        try {
+            assembly = compileTokens(tokens);
+        } catch(error) {
+            console.error(error,"Compiler failed during assembly generation");
+            return;
+        }
         return assembly;
     }
 
