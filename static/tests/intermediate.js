@@ -5,15 +5,22 @@ function registerTest(name,code) {
         code:code
     });
 }
+function runTest(test) {
+    if(typeof test.code === "function") {
+        test.code.call(null);
+    } else {
+        executeScript(test.code);
+    }
+}
 function runTests(raw=false) {
     if(raw) {
-        tests.forEach(test=>executeScript(test.code));
+        tests.forEach(runTest);
         return;
     }
     let passed = 0;
     tests.forEach(test => {
         try {
-            executeScript(test.code);
+            runTest(test);
             const message = `${test.name} passed :)`;
             console.log(message);
             output(message,"green");
@@ -66,7 +73,24 @@ const jumpTest = [
 
     OP_GEN.execute("output")
 ];
-
+registerTest("OwO com",() => {
+    const compiler = new OwO_Compiler();
+    compiler.compile([
+        "decware camel",
+        "decware dog wif 278",
+        'decware cat wif "meow"',
+        "decware function selfDestruct",
+        "decware animal list",
+        "decware animal gwoup",
+        "decware animal list: dog, cat, camel",
+        "decware animal gwoup: dog, cat, camel",
+        "decware favoriteNumbers list: 1, 2, 3, 4, 5",
+        "decware animal list from animal",
+        "decware animal gwoup from animal",
+        "decware dogIsHappy wif true",
+        "decware catIsHappy wif false"
+    ]);
+});
 registerTest("Accumulation test",accumlationTest);
 registerTest("Jump test",jumpTest);
-runTests();
+runTests(raw=true);
