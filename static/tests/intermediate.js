@@ -79,6 +79,13 @@ const jumpTest = [
 registerTest("OwO com",() => {
     const compiler = new OwO_Compiler(advancedLogging=true);
     compiler.compile([
+
+        'set catIsHappy -> false',
+        'set persons -> customers',
+        "set persons -> object#customers",
+        'set persons#0 -> "dave"',
+        
+
         "dec function test_function",
         "dec function test_function_p: a,b,c",
 
@@ -112,4 +119,5 @@ registerTest("Input test",[
     OP_GEN.input(),
     OP_GEN.output()
 ]);
+sendInput(12345567890);
 runTests(raw=false);

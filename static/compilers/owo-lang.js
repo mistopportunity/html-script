@@ -134,6 +134,9 @@ function OwO_Compiler(advancedLogging=false) {
     function invalidNumber(){
         return "Invalid static number";
     }
+    function invalidSet() {
+        return "Invalid variable set";
+    }
     function invalidVariableName(type){
         switch(type) {
             default:
@@ -194,7 +197,9 @@ function OwO_Compiler(advancedLogging=false) {
 
         variableDeclaration: "vardef",
         variableDeclaration_byValue: "vardef_vl",
-        variableDeclaration_byVariable: "vardef_vr"
+        variableDeclaration_byVariable: "vardef_vr",
+
+        setVariable: "setvr"
     };
 
     const valueReportTypes = {
@@ -377,7 +382,7 @@ function OwO_Compiler(advancedLogging=false) {
                         if(line.length > 3) {
                             const listItems = validateListItems(line.slice(3));
                             listItems.forEach(listItem => {
-                                if(listItem.type === valueTypes.byValue) {
+                                if(listItem.type === valueTypes.byValue || listItem.index) {
                                     throw SyntaxError(invalidDeclaration());
                                 }
                             });
@@ -473,7 +478,30 @@ function OwO_Compiler(advancedLogging=false) {
                     }
                 }
             case SET:
-                break;
+                if(line.length < 2) {
+                    throw SyntaxError(invalidSet());
+                }
+                const targetVariable = valueReport(line[1]);
+                if(line.length < 3) {
+                    throw SyntaxError(invalidSet());
+                }
+                if(line[2] !== FROM) {
+                    throw SyntaxError(unexpectedToken());
+                } else if(line.length !== 4) {
+                    throw SyntaxError(invalidSet());
+                }
+                if(line.length < 4) {
+                    throw SyntaxError(invalidSet());
+                }
+                const sourceVariable = valueReport(line[3]);
+                if(line.length > 4) {
+                    throw SyntaxError(invalidSet());          
+                }
+                const tokenObject = getTokenObject(tokenTypes.setVariable,{
+                    name: targetVariable,
+                    src: sourceVariable
+                });
+                return tokenObject;
         }
 
     }
