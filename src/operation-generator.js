@@ -22,6 +22,34 @@ const OP_GEN = new (function(){
     }
 //================================================================================
 //================================================================================
+    function getMathOPCodeForSign(sign) {
+        switch(sign) {
+            case "+":
+            case "plus":
+            case "add":
+            case "sum":
+            case MATH_CODE_ADD:
+                return MATH_CODE_ADD;
+            case "-":
+            case "minus":
+            case "subtract":
+            case MATH_CODE_SUBTRACT:
+                return MATH_CODE_SUBTRACT;
+            case "/":
+            case "divide":
+            case MATH_CODE_DIVIDE:
+                return  MATH_CODE_DIVIDE;
+            case "*":
+            case "x":
+            case "by":
+            case "multiply":
+            case "for":
+            case MATH_CODE_MULTIPLY:
+                return MATH_CODE_MULTIPLY;
+            default:
+                throw SyntaxError(unrecognizedMathSign(sign));
+        }
+    }
     function unrecognizedMathSign(sign) {
         return `Unrecognized math operation sign '${sign}'`;
     }
@@ -132,37 +160,7 @@ const OP_GEN = new (function(){
     this.setRegister_ByVariable = variableName => setRegisterGenerator({name:variableName});
 
     function basicRegisterMathGenerator(sign,imp) {
-        let operationCode;
-        switch(sign) {
-            case "+":
-            case "plus":
-            case "add":
-            case "sum":
-            case MATH_CODE_ADD:
-                operationCode = MATH_CODE_ADD;
-                break;
-            case "-":
-            case "minus":
-            case "subtract":
-            case MATH_CODE_SUBTRACT:
-                operationCode = MATH_CODE_SUBTRACT;
-                break;
-            case "/":
-            case "divide":
-            case MATH_CODE_DIVIDE:
-                operationCode = MATH_CODE_DIVIDE;
-                break;
-            case "*":
-            case "x":
-            case "by":
-            case "multiply":
-            case "for":
-            case MATH_CODE_MULTIPLY:
-                operationCode = MATH_CODE_MULTIPLY;
-                break;
-            default:
-                throw SyntaxError(unrecognizedMathSign(sign));
-        }
+        const operationCode = getMathOPCodeForSign(sign);
         const operation = basicOperation(operationCode,imp);
         return operation;
     }

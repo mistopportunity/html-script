@@ -1,0 +1,29 @@
+dec animal list: dog, cat, camel
+dec persons list -> allObjects#"people"
+dec camel -> animals#2
+dec camel -> animals#index
+dec firstAnimal -> animals2D#index#0
+dec firstAnimal -> animals2D#0#index
+dec camel
+dec firstAnimal -> animals2D#0#index#index#0#49#index
+dec dog -> 278
+dec cat -> meow
+dec function selfDestruct
+dec animal list
+dec animal group
+dec animal group: dog, cat, camel
+dec favoriteNumbers list: 1, 2, 3, 4, 5
+dec animal list -> animals
+dec animal group -> animals
+dec dogIsHappy -> true
+dec catIsHappy -> false
+
+set catIsHappy -> false
+set persons -> customers
+set persons -> object#customers
+set persons#0 -> "dave"
+
+dec function test_function
+dec function test_function_p: a,b,c
+
+dec animal list: objects#0, objects#1, objects#3, objects2D#0#0
