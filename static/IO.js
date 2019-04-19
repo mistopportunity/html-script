@@ -1,6 +1,6 @@
 const outputElement = document.getElementById("output");
 const awaitingInputElement = document.getElementById("awaiting-input");
-const awaitingInputText = "Awaiting input via 'sendInput...'";
+const awaitingInputText = "Awaiting input via 'sendInput'...";
 const awaitingInputLogStyle = "background-color: black; color: white;padding: 4px";
 awaitingInputElement.textContent = awaitingInputText;
 awaitingInputElement.classList.add("hidden");

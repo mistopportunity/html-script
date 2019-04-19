@@ -17,8 +17,10 @@ const MATH_CODE_SUBTRACT = "sub";
 const MATH_CODE_MULTIPLY = "mtp";
 const MATH_CODE_DIVIDE = "div";
 
-const INPUT_FUNCTION_NAME = "~in";
-const OUTPUT_FUNCTION_NAME = "~out";
+const IL_SAFETY_CHARACTER = "~";
+const INTERNAL_KEY = IL_SAFETY_CHARACTER + "internal";
+const INPUT_FUNCTION_NAME = IL_SAFETY_CHARACTER + "~in";
+const OUTPUT_FUNCTION_NAME = IL_SAFETY_CHARACTER + "~out";
 
 const JUMP_OP_CODE = "jmp";
 const CON_JUMP_OP_CODE = "cjmp";
