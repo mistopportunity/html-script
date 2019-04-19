@@ -80,11 +80,22 @@ registerTest("OwO com",() => {
     const compiler = new OwO_Compiler(advancedLogging=true);
     compiler.compile([
 
+        "dec inputBuffer <- input",
+        "dec inputBuffer",
+
         'set catIsHappy -> false',
         'set persons -> customers',
         "set persons -> object#customers",
         'set persons#0 -> "dave"',
         
+        "set buffer <- input",
+        "output buffer",
+        "output: a, b, c",
+        "output: a#0, b#0#0, c#123#0",
+        "output friends#202030",
+        "output friends#0#ayy_lmao",
+        'output "ayy lmao"',
+        'output: "what the mcfucc", "excuseeeee me"',
 
         "dec function test_function",
         "dec function test_function_p: a,b,c",

@@ -28,8 +28,12 @@ function OwO_Compiler(advancedLogging=false) {
     const GROUP_DEFINE = GROUP + enumerableSeperator;
 
     const SET = "set";
-    const DO = "do";
+    const DO = "call";
     const LENGTH = "size";
+
+    const INPUT = "input";
+    const OUTPUT = "output";
+    const OUTPUT_LIST = OUTPUT + enumerableSeperator;
 
     const EQUAL = "=";
     const NOT_EQUAL = "!=";
@@ -43,7 +47,8 @@ function OwO_Compiler(advancedLogging=false) {
 
     const ADD = "add";
     const SUBTRACT = "subtract";
-    const FROM = "->";
+    const RIGHT_ARROW = "->";
+    const LEFT_ARROW = "<-";
 
     const keyWords = [
         DECLARE,
@@ -56,7 +61,7 @@ function OwO_Compiler(advancedLogging=false) {
         IF,
         ELSE,
     
-        FUNCTION ,
+        FUNCTION,
     
         LIST,
         GROUP,
@@ -79,7 +84,11 @@ function OwO_Compiler(advancedLogging=false) {
     
         ADD,
         SUBTRACT,
-        FROM
+        RIGHT_ARROW,
+
+        INPUT,
+        OUTPUT,
+        OUTPUT_LIST
     ];
     
     const legalNumbersLookup = {};
@@ -119,6 +128,9 @@ function OwO_Compiler(advancedLogging=false) {
     function expectedFunctionParameters() {
         return "Expected function parameters but there are none";
     }
+    function operationNotImplemented() {
+        return "Operation not implemented";
+    }
     function unexpectedToken(){
         return "Unexpected token";
     }
@@ -137,6 +149,9 @@ function OwO_Compiler(advancedLogging=false) {
     function invalidSet() {
         return "Invalid variable set";
     }
+    function invalidOutputStatement() {
+        return "Invalid output statement";
+    }
     function invalidVariableName(type){
         switch(type) {
             default:
@@ -149,6 +164,8 @@ function OwO_Compiler(advancedLogging=false) {
                 return "Invalid variable name uses non-allowed characters";
             case 3:
                 return "Use of indexing is malformed";
+            case 4:
+                return "Use of indexing is not allowed";
         }
     }
 
@@ -199,7 +216,13 @@ function OwO_Compiler(advancedLogging=false) {
         variableDeclaration_byValue: "vardef_vl",
         variableDeclaration_byVariable: "vardef_vr",
 
-        setVariable: "setvr"
+        setVariable: "setvr",
+        setVariable_toInput: "setvr_in",
+
+        declareVariable_withInput: "vardef_in",
+
+        send_output: "out",
+        send_output_many: "out_x"
     };
 
     const valueReportTypes = {
@@ -220,6 +243,42 @@ function OwO_Compiler(advancedLogging=false) {
 
     function compileTokens(tokens) {
 
+    }
+
+    function tokenizeWithPotentialStrings(line) {
+        const newLine = [];
+        let newLineBuffer = "";
+        let makingString = false;
+        for(let i = 0;i<line.length;i++) {
+            const currentCharacter = line[i];
+            switch(currentCharacter) {
+                case stringQuoteCharacter:
+                    if(makingString) {
+                        makingString = false;
+                    } else {
+                        makingString = true;
+                    }
+                    newLineBuffer += currentCharacter;
+                    break;
+                case tokenSeperator:
+                    if(makingString) {
+                        newLineBuffer += currentCharacter;
+                    } else {
+                        if(newLineBuffer.trim().length) {
+                            newLine.push(newLineBuffer);
+                            newLineBuffer = "";
+                        }
+                    }
+                    break;
+                default:
+                    newLineBuffer += currentCharacter;
+                    break;
+            }
+        }
+        if(newLineBuffer.trim().length) {
+            newLine.push(newLineBuffer);
+        }
+        return newLine;
     }
 
     function validateVariableName(name) {
@@ -244,7 +303,7 @@ function OwO_Compiler(advancedLogging=false) {
             }
         }
         if(lookupName.length > 1) {
-            const errorWithReturnValues = Error();
+            const errorWithReturnValues = SyntaxError(invalidVariableName(4));
             errorWithReturnValues.valueReportData = {
                 rootName: lookupNameStart,
                 remainingIndexers: lookupName.slice(1)
@@ -367,11 +426,27 @@ function OwO_Compiler(advancedLogging=false) {
             return null;
         }
         line = insertPotentialSpaces(line);
-        line = line.split(tokenSeperator);
+        line = tokenizeWithPotentialStrings(line);
         if(!line.length) {
             return null;
         }
         switch(line[0]) {
+            default:
+                throw Error(operationNotImplemented());
+            case OUTPUT_LIST:
+                const outputItems = validateListItems(line.slice(1));
+                return getTokenObject(tokenTypes.send_output_many,{
+                    values: outputItems
+                });
+            case OUTPUT:
+                if(line.length === 2) {
+                    const value = valueReport(line[1]);
+                    return getTokenObject(tokenTypes.send_output,{
+                        value:value
+                    });
+                } else {
+                    throw SyntaxError(invalidOutputStatement());
+                }
             case DECLARE:
                 if(line[1] === FUNCTION) {
                     if(line.length < 2) {
@@ -418,7 +493,7 @@ function OwO_Compiler(advancedLogging=false) {
                                     name: variableName
                                 });
                             } else if(line.length === 5) {
-                                if(line[3] === FROM) {
+                                if(line[3] === RIGHT_ARROW) {
                                     const listValueReport = valueReport(line[4]);
                                     const tokenType = line[2] === LIST ?
                                         tokenTypes.listDeclaration_fromOther:
@@ -448,7 +523,18 @@ function OwO_Compiler(advancedLogging=false) {
                                 name: variableName,
                                 values: listItems
                             });
-                        case FROM:
+                        case LEFT_ARROW:
+                            if(line.length !== 4) {
+                                throw SyntaxError(invalidDeclaration());
+                            }
+                            if(line[3] === INPUT) {
+                                return getTokenObject(tokenTypes.declareVariable_withInput,{
+                                    name: variableName
+                                });
+                            } else {
+                                throw SyntaxError(invalidDeclaration());
+                            }
+                        case RIGHT_ARROW:
                             if(line.length !== 4) {
                                 throw SyntaxError(invalidDeclaration());
                             }
@@ -485,9 +571,24 @@ function OwO_Compiler(advancedLogging=false) {
                 if(line.length < 3) {
                     throw SyntaxError(invalidSet());
                 }
-                if(line[2] !== FROM) {
-                    throw SyntaxError(unexpectedToken());
-                } else if(line.length !== 4) {
+                switch(line[2]) {
+                    case RIGHT_ARROW:
+                        break;
+                    case LEFT_ARROW:
+                        if(line.length !== 4) {
+                            throw SyntaxError(invalidSet());
+                        }
+                        if(line[3] === INPUT) {
+                            return getTokenObject(tokenTypes.setVariable_toInput,{
+                                name: targetVariable
+                            });
+                        } else {
+                            throw SyntaxError(invalidSet());
+                        }
+                    default:
+                        throw SyntaxError(invalidSet());
+                }
+                if(line.length !== 4) {
                     throw SyntaxError(invalidSet());
                 }
                 if(line.length < 4) {
