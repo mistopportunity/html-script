@@ -1,4 +1,9 @@
-function lookupArray() {
+export default LookupArray;
+
+const ARRAY_EMPTY_ERROR = "This operation is invalid because the enumerable type is empty";
+const ARRAY_BOUNDS_ERROR = "The fabled index out of bounds error";
+
+function LookupArray() {
     this.array = [];
     this.list = {};
     this.push = item => {

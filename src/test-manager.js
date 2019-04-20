@@ -1,3 +1,10 @@
+import { executeScript, executeScript_WithScope } from "/processor.js";
+
+export default function() {
+    throw Error("Import both 'runTests' and 'registerTest' to use this module");
+}
+export { runTests, registerTest }
+
 const tests = [];
 function registerTest(name,code) {
     tests.push({

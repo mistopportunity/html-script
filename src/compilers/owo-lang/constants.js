@@ -1,5 +1,4 @@
 const OwO_Constants = new (function(){
-
     const enumerableSeperator = ":";
 
     this.DECLARE = "dec";
@@ -108,3 +107,4 @@ const OwO_Constants = new (function(){
 
     this.SINGLE_LINE_COMMENT = "//";
 })();
+export default OwO_Constants;

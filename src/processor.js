@@ -1,10 +1,12 @@
+import LookupArray from "/lookup-array.js";
+export default executeScript;
+export { executeScript, executeScript_WithScope }
+
 const UNSET_VALUE_REGISTER = "The value register in this scope was never set before its use";
 const INVALID_OPERATION_CODE = "Invalid operation code";
 const MISSING_JUMP_PARAMETERS = "A jump operation is missing a type or a index in one of its jump blocks";
 const IMPOSSIBLE_TRUTH = "Cannot evaluate the truth of an undefined value";
 const MISSING_SCOPE_CODE = "Scope block operation is missing a code block";
-const ARRAY_EMPTY_ERROR = "This operation is invalid because the enumerable type is empty";
-const ARRAY_BOUNDS_ERROR = "The fabled index out of bounds error";
 const MISSING_INDEX_PARAMETER = "This operation is missing an index parameter";
 const GENERIC_ENUMERABLE_REF_ERROR = "An error occured in an enumerable element's operation. This error is likely internal.";
 const EMPTY_REGISTER_ERROR = "The register has no value";
@@ -65,7 +67,7 @@ function processDeclaration(statementOrBlock,blockScope) {
             blockScope[variableName] = null;
             break;
         case ENUMERABLE_TYPE_CODE:
-            const container = new lookupArray()
+            const container = new LookupArray()
             blockScope[variableName] = {
                 type: ENUMERABLE_TYPE_CODE,
                 container:container

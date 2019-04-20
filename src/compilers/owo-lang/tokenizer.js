@@ -1,6 +1,7 @@
-function OwO_Tokenizer() {
-    const CONSTANT = OwO_Constants;
+export default OwO_Tokenizer;
+import CONSTANT from "/compilers/owo-lang/constants.js";
 
+function OwO_Tokenizer() {
     const INVALID_DECLARATION = "Invalid declaration";
     const REQUIRES_FUNCTION_PARAMETERS = "Expected function parameters but there are none";
     const UNKNOWN_OPERATION = "Unknown operation";

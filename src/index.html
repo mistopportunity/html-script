@@ -29,25 +29,14 @@
     <p id="awaiting-input"></p>
     <h1>output</h1>
     <div id="output"></div>
+
     <script src="IO.js"></script>
-
     <script src="operation-codes.js"></script>
-    <script src="operation-generator.js"></script>
-    
-    <script src="lookup-array.js"></script>
-    <script src="processor.js"></script>
-    <script src="test-manager.js"></script>
 
-    <script src="compilers/owo-lang/constants.js"></script>
-    <script src="compilers/owo-lang/main.js"></script>
+    <script src="test-manager.js" type="module"></script>
+    <script src="tests/processor.js" type="module"></script>
+    <script src="tests/owo-lang.js" type="module"></script>
 
-    <script src="compilers/owo-lang/preprocess.js"></script>
-    <script src="compilers/owo-lang/tokenizer.js"></script>
-    <script src="compilers/owo-lang/token-compiler.js"></script>
-
-    <script src="tests/processor.js"></script>
-    <script src="tests/owo-lang.js"></script>
-
-    <script>runTests(raw=false);</script>
+    <script type="module">import {runTests} from "/test-manager.js"; runTests(false)</script>
 </body>
 </html>

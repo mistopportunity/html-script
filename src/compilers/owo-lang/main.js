@@ -1,3 +1,10 @@
+export default OwO_Compiler;
+export { OwO_Compiler }
+
+import OwO_Preprocessor from "/compilers/owo-lang/preprocess.js";
+import OwO_Tokenizer from "/compilers/owo-lang/tokenizer.js";
+import OwO_TokenCompiler from "/compilers/owo-lang/token-compiler.js";
+
 function OwO_Compiler(advancedLogging=false) {
     if(typeof advancedLogging !== typeof true) {
         throw TypeError(`Parameter 'advancedLogging' must be of type '${typeof true}', not '${typeof advancedLogging}'`);

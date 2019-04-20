@@ -285,3 +285,5 @@ const OP_GEN = new (function(){
         return this.execute(OUTPUT_FUNCTION_NAME);
     }
 })();
+export default OP_GEN;
+export { OP_GEN }

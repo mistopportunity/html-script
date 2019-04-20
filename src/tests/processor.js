@@ -1,3 +1,6 @@
+import { registerTest } from "/test-manager.js";
+import { OP_GEN } from "/operation-generator.js";
+
 const accumlationTest = [
     OP_GEN.functionBlock("my_function",[
         OP_GEN.setRegister_ByVariable("rdc"),
