@@ -34,16 +34,15 @@ const REGISTER_OP_CODE = "reg";
 const EXECUTE_OP_CODE = "exe";
 const RETURN_OP_CODE = "ret";
 const BLOCK_OP_CODE = "blk";
+const GET_INDEX_OP_CODE = "geti";
+const CONTAINS_OP_CODE = "cont";
+const GET_SIZE_OP_CODE = "getl";
+const ENM_CHANGE_OP_CODE = "enmc";
 
 const STATIC_JUMP_TYPE = "stc";
 const DYNAM_JUMP_TYPE = "dyn";
 
-const GET_INDEX_OP_CODE = "geti";
-const CONTAINS_OP_CODE = "cont";
-const GET_SIZE_OP_CODE = "getl";
 const GET_ENM_VALUE_COUNT = "getv";
-
-const ENM_CHANGE_OP_CODE = "enmc";
 const ENM_CHANGE_ADD_START = "eas";
 const ENM_CHANGE_DEL_START = "eds";
 const ENM_CHANGE_ADD_END = "ead";

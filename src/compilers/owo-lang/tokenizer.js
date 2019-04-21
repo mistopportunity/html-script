@@ -389,7 +389,6 @@ function OwO_Tokenizer() {
                     const tokenObject = getTokenObject(CONSTANT.tokenTypes.setVariable_toInput,{
                         name: targetVariable
                     });
-                    tokenObject.name.value = tokenObject.name.value.value;
                     return tokenObject;
                 } else {
                     throw SyntaxError(INVALID_VARIABLE_SET);
@@ -411,7 +410,6 @@ function OwO_Tokenizer() {
             name: targetVariable,
             src: sourceVariable
         });
-        tokenObject.name.value = tokenObject.name.value.value;
         return tokenObject;
     }
     function getComparison(text) {

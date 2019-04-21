@@ -79,12 +79,13 @@ const OP_GEN = new (function(){
     }
 
     this.functionBlock = function functionBlockGenerator(name,code,...parameters) {
-        return basicOperation(DECLARE_OP_CODE,{
+        const operation = basicOperation(DECLARE_OP_CODE,{
             name:name,
             type:FUNCTION_TYPE_CODE,
             code:code,
             parameters:parameters
         });
+        return operation;
     };
     this.conditionalJump = function conditionalJumpGenerator(trueIndex,falseIndex,indexIsBaked) {
         const jumpType = getBasicJumpType(indexIsBaked);

@@ -5,6 +5,8 @@ import OwO_Preprocessor from "/compilers/owo-lang/preprocess.js";
 import OwO_Tokenizer from "/compilers/owo-lang/tokenizer.js";
 import OwO_TokenCompiler from "/compilers/owo-lang/token-compiler.js";
 
+import CONSTANT from "/compilers/owo-lang/constants.js";
+
 function OwO_Compiler(advancedLogging=false) {
     if(typeof advancedLogging !== typeof true) {
         throw TypeError(`Parameter 'advancedLogging' must be of type '${typeof true}', not '${typeof advancedLogging}'`);
@@ -40,6 +42,19 @@ function OwO_Compiler(advancedLogging=false) {
         }
         if(advancedLogging) {
             console.log("Compiled tokens:",tokens);
+            const tokenTypes = CONSTANT.tokenTypes;
+            const tokenValues = Object.values(tokenTypes);
+            const tokenRemainderList = {};
+            tokenValues.forEach(tokenValue=>{
+                tokenRemainderList[tokenValue] = true
+            });
+            tokens.forEach(token => {
+                if(tokenRemainderList[token.type]) {
+                    delete tokenRemainderList[token.type];
+                }
+            });
+            const remainingItemsString = Object.keys(tokenRemainderList).join(", ");
+            console.log("Remaining token types to test:",remainingItemsString||"None");
         }
         let assembly;
         try {

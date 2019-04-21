@@ -16,6 +16,9 @@ function OwO_Preprocessor() {
                 newLines.push(line.trim());
             }
         }
+        if(newLines[newLines.length-1] === "") {
+            newLines.pop();
+        }
         return newLines;
     }
 }
