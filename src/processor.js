@@ -477,7 +477,10 @@ async function executeBlock(data,parentScope,parameterizer,entryScope) {
                 if(parentScope) {
                     parentScope[INTERNAL_KEY].valueRegister = value;
                 }
-                break;
+                if(scopeLevel === 0) {
+                    return blockScope;
+                }
+                return;
             case CON_JUMP_OP_CODE:
                 const valueRegister = blockScope[INTERNAL_KEY].valueRegister;
                 if(valueRegister !== undefined) {

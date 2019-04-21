@@ -1,48 +1,38 @@
 const OwO_Constants = new (function(){
     const enumerableSeperator = ":";
 
+    this.FUNCTION = "function";
     this.DECLARE = "dec";
-    this.WRITE = "write";
-    this.READ = "read";
-    this.RETURN = "return";
-    this.WHILE = "while";
-    this.OPEN_BRACE = "OwO";
-    this.END_BRACE = "UwO";
+    this.SET = "set";
     this.IF = "if";
     this.ELSE = "else";
-
-    this.FUNCTION = "function";
-
     this.LIST = "list";
     this.GROUP = "group";
     this.LIST_DEFINE = this.LIST + enumerableSeperator;
     this.GROUP_DEFINE = this.GROUP + enumerableSeperator;
-
-    this.SET = "set";
-    this.DO = "call";
-    this.LENGTH = "size";
-
     this.INPUT = "input";
     this.OUTPUT = "output";
     this.OUTPUT_LIST = this.OUTPUT + enumerableSeperator;
-
+    this.DELETE = "del";
+    this.RIGHT_ARROW = "->";
+    this.LEFT_ARROW = "<-";
     this.EQUAL = "=";
     this.NOT_EQUAL = "!=";
     this.GREATER = ">";
     this.LESSER = "<";
     this.GREATER_OR_EQUAL = ">=";
     this.LESS_OR_EQUAL = "<=";
-
     this.TRUE = "true";
     this.FALSE = "false";
-
+    this.DO = "call";
     this.ADD = "add";
-    this.SUBTRACT = "subtract";
-    this.RIGHT_ARROW = "->";
-    this.LEFT_ARROW = "<-";
+    this.SUBTRACT = "sub";
+    this.RETURN = "ret";
+    this.WHILE = "while";
+    this.LENGTH = "size";
+    this.CONTAINS = "cont";
 
     this.keyWords = Object.values(this);
-
     this.indexingCharacter = "#";
     this.tokenSeperator = " ";
     this.stringQuoteCharacter = '"';
@@ -68,8 +58,6 @@ const OwO_Constants = new (function(){
     });
 
     this.tokenTypes = {
-        blockStart: "blockStart",
-        blockEnd: "blockEnd",
         functionDeclaration_WithParameters: "funcdef_p",
         functionDeclaration: "funcdef",
 
@@ -92,7 +80,31 @@ const OwO_Constants = new (function(){
         declareVariable_withInput: "vardef_in",
 
         send_output: "out",
-        send_output_many: "out_x"
+        send_output_many: "out_x",
+
+        empty_line: "emp_ln",
+        declareVariable_withFunctionCall: "vardef_fc",
+        declareVariable_withFunctionCall_param: "vardef_fcp",
+
+        delete_variable: "delvar",
+        if_statement: "if",
+        else_statement: "else",
+
+        call_function: "callf",
+        call_function_param: "callf_p",
+
+        variable_operation: "varop",
+
+        block_return: "blkrt",
+        block_return_value: "blkrt_vl",
+        while_statement: "loop",
+
+        declareVariable_byLength: "vardef_sz",
+        declareVariable_byContains: "vardef_cn",
+
+        setVariable_byLength: "setvr_siz",
+        setVariable_byContains: "setvr_cn"
+
     };
 
     this.valueReportTypes = {

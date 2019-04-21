@@ -1,3 +1,35 @@
+output animals
+output: cat, dog, zebra
+
+dec character <- input
+del character
+
+add 1 -> animalCount
+sub primeNumber#0 -> sum
+
+set x <- animals size
+set x <- animals cont 0
+dec animalCount <- animals size
+dec hasTiger <- animals cont tiger
+
+if x = 2
+ret
+ret animals
+while x = 2
+else
+call afunction
+call afunction: withParameters
+
+dec function afunction: a, b, c
+call afunction: 0, 1, 2
+
+dec animal <- getAnimalByIndex: 0
+dec animal <- getRandomAnimal
+
+set animal#0 -> dog
+set animal#0 -> "dog"
+set character#0 <- input
+
 dec animal list: dog, cat, camel
 dec persons list -> allObjects#"people"
 dec camel -> animals#2
@@ -17,13 +49,10 @@ dec animal list -> animals
 dec animal group -> animals
 dec dogIsHappy -> true
 dec catIsHappy -> false
-
 set catIsHappy -> false
 set persons -> customers
 set persons -> object#customers
 set persons#0 -> "dave"
-
 dec function test_function
 dec function test_function_p: a,b,c
-
 dec animal list: objects#0, objects#1, objects#3, objects2D#0#0

@@ -1,24 +1,33 @@
 export default OwO_Tokenizer;
 import CONSTANT from "/compilers/owo-lang/constants.js";
 
+const INVALID_DECLARATION = "Invalid declaration";
+const REQUIRES_FUNCTION_PARAMETERS = "Expected function parameters but there are none";
+const UNKNOWN_OPERATION = "Unknown operation";
+const UNEXPECTED_TOKEN = "Unexpected token";
+const UNEXPECTED_VALUE = "Unexpected value";
+const EXPECTED_STRING_QUOTE = "Expected a string end quote";
+const INVALID_NUMBER_CHARACTER = "Number contains a non-number character";
+const INVALID_NUMBER = "Invalid static number";
+const INVALID_VARIABLE_SET = "Invalid variable set";
+const INVALID_OUTPUT_STATEMENT = "Invalid output statement";
+
+const INVALID_VARIABLE_NAME_KEYWORD = "Invalid variable name uses a reserved key word";
+const INVALID_VARIABLE_NAME_NUMBER = "Invalid variable name starts with a number";
+const INVALID_VARIABLE_NAME_ILLEGAL_CHAR = "Invalid variable name uses non-allowed characters";;
+const INVALID_VARIABLE_NAME_BAD_IDX = "Use of indexing is malformed";
+const INVALID_VARIABLE_NAME_ILLEGAL_IDX = "Use of indexing is not allowed";
+
+const INVALID_IF_STATEMENT = "Invalid if statement";
+const INVLAID_ELSE_STATEMENT = "Invalid else statement";
+const INVALID_DELETION = "Invalid deletion statement";
+const INVALID_COMPARISON_SYMBOL = "Invalid comparison symbol";
+const EXPECTED_RIGHT_ARROW = `Expected token '${CONSTANT.RIGHT_ARROW}'`;
+
+const INVALID_DO_STATEMENT = "Invalid function call statement";
+const INVALID_WHILE_STATEMENT = "Invalid while statement";
+
 function OwO_Tokenizer() {
-    const INVALID_DECLARATION = "Invalid declaration";
-    const REQUIRES_FUNCTION_PARAMETERS = "Expected function parameters but there are none";
-    const UNKNOWN_OPERATION = "Unknown operation";
-    const UNEXPECTED_TOKEN = "Unexpected token";
-    const UNEXPECTED_VALUE = "Unexpected value";
-    const EXPECTED_STRING_QUOTE = "Expected a string end quote";
-    const INVALID_NUMBER_CHARACTER = "Number contains a non-number character";
-    const INVALID_NUMBER = "Invalid static number";
-    const INVALID_VARIABLE_SET = "Invalid variable set";
-    const INVALID_OUTPUT_STATEMENT = "Invalid output statement";
-
-    const INVALID_VARIABLE_NAME_KEYWORD = "Invalid variable name uses a reserved key word";
-    const INVALID_VARIABLE_NAME_NUMBER = "Invalid variable name starts with a number";
-    const INVALID_VARIABLE_NAME_ILLEGAL_CHAR = "Invalid variable name uses non-allowed characters";;
-    const INVALID_VARIABLE_NAME_BAD_IDX = "Use of indexing is malformed";
-    const INVALID_VARIABLE_NAME_ILLEGAL_IDX = "Use of indexing is not allowed";
-
     function getValueStub(value,typeName) {
         return {
             value: value,
@@ -267,13 +276,50 @@ function OwO_Tokenizer() {
                         values: listItems
                     });
                 case CONSTANT.LEFT_ARROW:
-                    if(line.length !== 4) {
-                        throw SyntaxError(INVALID_DECLARATION);
-                    }
-                    if(line[3] === CONSTANT.INPUT) {
-                        return getTokenObject(CONSTANT.tokenTypes.declareVariable_withInput,{
-                            name: variableName
-                        });
+                    if(line.length === 4) {
+                        if(line[3] === CONSTANT.INPUT) {
+                            return getTokenObject(CONSTANT.tokenTypes.declareVariable_withInput,{
+                                name: variableName
+                            });
+                        } else {
+                            const functionName = valueReport(line[3]);
+                            return getTokenObject(CONSTANT.tokenTypes.declareVariable_withFunctionCall,{
+                                name: variableName,
+                                src: functionName
+                            });
+                        }
+                    } else if((line.length === 6 && line[4] === CONSTANT.CONTAINS)) {
+                        const value1 = valueReport(line[3]);
+                        const value2 = valueReport(line[5]);
+                        const tokenObject = getTokenObject(
+                            CONSTANT.tokenTypes.declareVariable_byContains,{
+                                name: variableName,
+                                value1:value1,
+                                value2:value2
+                            }
+                        );
+                        return tokenObject
+                    } else if(line.length === 5 && line[4] === CONSTANT.LENGTH) {
+                        const value1 = valueReport(line[3]);
+                        const tokenObject = getTokenObject(
+                            CONSTANT.tokenTypes.declareVariable_byLength,{
+                                name: variableName,
+                                value:value1
+                            }
+                        );
+                        return tokenObject;
+                    } else if(line.length > 4) {
+                        if(line[3].endsWith(CONSTANT.enumerableSeperator)) {
+                            const functionName = valueReport(line[3].substring(0,line[3].length-1));
+                            const listItems = validateListItems(line.slice(4));
+                            return getTokenObject(CONSTANT.tokenTypes.declareVariable_withFunctionCall_param,{
+                                name: variableName,
+                                src: functionName,
+                                values: listItems
+                            });
+                        } else {
+                            throw SyntaxError(INVALID_DECLARATION);
+                        }
                     } else {
                         throw SyntaxError(INVALID_DECLARATION);
                     }
@@ -319,13 +365,32 @@ function OwO_Tokenizer() {
             case CONSTANT.RIGHT_ARROW:
                 break;
             case CONSTANT.LEFT_ARROW:
-                if(line.length !== 4) {
-                    throw SyntaxError(INVALID_VARIABLE_SET);
-                }
-                if(line[3] === CONSTANT.INPUT) {
-                    return getTokenObject(CONSTANT.tokenTypes.setVariable_toInput,{
+                if((line.length === 6 && line[4] === CONSTANT.CONTAINS)) {
+                    const value1 = valueReport(line[3]);
+                    const value2 = valueReport(line[5]);
+                    const tokenObject = getTokenObject(
+                        CONSTANT.tokenTypes.setVariable_byContains,{
+                            name: targetVariable,
+                            value1:value1,
+                            value2:value2
+                        }
+                    );
+                    return tokenObject
+                } else if(line.length === 5 && line[4] === CONSTANT.LENGTH) {
+                    const value1 = valueReport(line[3]);
+                    const tokenObject = getTokenObject(
+                        CONSTANT.tokenTypes.setVariable_byLength,{
+                            name: targetVariable,
+                            value:value1
+                        }
+                    );
+                    return tokenObject;
+                } else if(line[3] === CONSTANT.INPUT && line.length === 4) {
+                    const tokenObject = getTokenObject(CONSTANT.tokenTypes.setVariable_toInput,{
                         name: targetVariable
                     });
+                    tokenObject.name.value = tokenObject.name.value.value;
+                    return tokenObject;
                 } else {
                     throw SyntaxError(INVALID_VARIABLE_SET);
                 }
@@ -346,11 +411,25 @@ function OwO_Tokenizer() {
             name: targetVariable,
             src: sourceVariable
         });
+        tokenObject.name.value = tokenObject.name.value.value;
         return tokenObject;
+    }
+    function getComparison(text) {
+        switch(text) {
+            case CONSTANT.EQUAL:
+            case CONSTANT.NOT_EQUAL:
+            case CONSTANT.GREATER:
+            case CONSTANT.LESSER:
+            case CONSTANT.GREATER_OR_EQUAL:
+            case CONSTANT.LESS_OR_EQUAL:
+                return text;
+            default:
+                throw SyntaxError(INVALID_COMPARISON_SYMBOL);
+        }
     }
     function getLineSchema(line) {
         if(!line) {
-            return null;
+            return getTokenObject(CONSTANT.tokenTypes.empty_line,{});
         }
         line = splitWithPotentialStrings(line,CONSTANT.tokenSeperator);
         if(!line.length) {
@@ -377,6 +456,93 @@ function OwO_Tokenizer() {
                 return processDeclarationLine(line);
             case CONSTANT.SET:
                 return processSetLine(line);
+            case CONSTANT.DELETE:
+                if(line.length === 2) {
+                    const value = valueReport(line[1]);
+                    return getTokenObject(CONSTANT.tokenTypes.delete_variable,{
+                        value:value
+                    });
+                } else {
+                    throw SyntaxError(INVALID_DELETION);
+                }
+            case CONSTANT.IF:
+                if(line.length === 4) {
+                    const value1 = valueReport(line[1]);
+                    const comparison = getComparison(line[2]);
+                    const value2 = valueReport(line[3]);
+                    return getTokenObject(CONSTANT.tokenTypes.if_statement,{
+                        value1: value1,
+                        comparison: comparison,
+                        value2: value2
+                    });
+                } else {
+                    throw SyntaxError(INVALID_IF_STATEMENT);
+                }
+            case CONSTANT.ELSE:
+                if(line.length === 1) {
+                    return getTokenObject(CONSTANT.tokenTypes.else_statement,{});
+                } else {
+                    throw SyntaxError(INVLAID_ELSE_STATEMENT);
+                }
+            case CONSTANT.SUBTRACT:
+            case CONSTANT.ADD:
+                if(line.length === 4) {
+                    const value1 = valueReport(line[1]);
+                    if(line[2] !== CONSTANT.RIGHT_ARROW) {
+                        throw SyntaxError(EXPECTED_RIGHT_ARROW);
+                    }
+                    const value2 = valueReport(line[3]);
+                    return getTokenObject(CONSTANT.tokenTypes.variable_operation,{
+                        operation: line[0],
+                        value: value1,
+                        name: value2
+                    });
+                }
+                break;
+            case CONSTANT.DO:
+                if(line.length === 2) {
+                    const functionName = valueReport[line[1]];
+                    return getTokenObject(CONSTANT.tokenTypes.call_function,{
+                        name: functionName
+                    });
+                } else if(line.length > 2) {
+                    if(line[1].endsWith(CONSTANT.enumerableSeperator)) {
+                        const functionName = valueReport(line[1].substring(0,line[1].length-1));
+                        const listItems = validateListItems(line.slice(2));
+                        return getTokenObject(CONSTANT.tokenTypes.call_function_param,{
+                            name: functionName,
+                            values: listItems
+                        });
+                    } else {
+                        throw SyntaxError(INVALID_DO_STATEMENT);
+                    }
+                } else {
+                    throw SyntaxError(INVALID_DO_STATEMENT);
+                }
+            case CONSTANT.RETURN:
+                if(line.length === 1) {
+                    return getTokenObject(CONSTANT.tokenTypes.block_return,{});
+                } else if(line.length === 2) {
+                    const value = valueReport(line[1]);
+                    return getTokenObject(CONSTANT.tokenTypes.block_return_value,{
+                        value:value
+                    });
+                } else {
+                    throw SyntaxError(INVALID_DELETION);
+                }
+            case CONSTANT.WHILE:
+                if(line.length === 4) {
+                    const value1 = valueReport(line[1]);
+                    const comparison = getComparison(line[2]);
+                    const value2 = valueReport(line[3]);
+                    return getTokenObject(CONSTANT.tokenTypes.while_statement,{
+                        value1: value1,
+                        comparison: comparison,
+                        value2: value2
+                    });
+                } else {
+                    throw SyntaxError(INVALID_WHILE_STATEMENT);
+                }
         }
     }
     this.tokenize = function(lines) {
